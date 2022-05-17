@@ -1,0 +1,28 @@
+---
+title: "Descriptive Stats for COVID follow up study"
+output: html_notebook
+---
+
+This is the .rmd file for some quick visualization for descriptive stats.
+
+```{r dataloader, echo = FALSE}
+source('utils/utils.R')
+```
+
+```{r}
+Complete_test_wide <- read_csv('../data/COVIDdata_merged_Haoxue_version.csv')
+```
+
+# Time Interval
+
+```{r}
+Complete_test_wide %>% ggplot(aes(x=as.double(Delta_Dat))) +
+   geom_histogram(aes(fill=Platform), color='black') +
+   xlab('T2-T1 (days)')
+
+```
+
+
+
+
+

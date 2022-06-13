@@ -13,6 +13,14 @@ beta_squeeze <- function(y) {
   y2 <- (y*(n-1) + 0.5)/n
   return(y2)
 }
+reverse_beta_squeeze <- function(y2, n, likert_min_max=NULL) {
+  y <- (n * y2 -  0.5) / (n - 1)
+  if (!is.null(likert_min_max_nstep)){
+    y <- (y * (likert_min_max[2]-likert_min_max[1])) + likert_min_max[1]
+  }
+  return(y)
+}
+
 #Function to convert logodds to probability
 logit2prob <- function(logit){
   odds <- exp(logit)
@@ -54,7 +62,7 @@ plot_model_IVs <- function(your_model, variable_array, x_range=seq(-2.5, 2.5, by
   return(p)
 }
 
-plot_model_IVs_stan <- function(your_model, variable_array, x_range=seq(-2.5, 2.5, by = 0.5)){
+plot_model_IVs_stan <- function(your_model, variable_array, x_range=seq(-2.5, 2.5, by = 0.5), return_df = FALSE){
   #' plot predicted DV as a function of one (or many) IV(s)
   #' inputs:
   #'         your model: fitted model that sjPlot() accept as an input
@@ -82,15 +90,16 @@ plot_model_IVs_stan <- function(your_model, variable_array, x_range=seq(-2.5, 2.
     geom_ribbon(aes_string(ymin = "ymin",
                            ymax = "ymax" , fill = "x_name"), alpha = 0.3, color=NA,
                 show.legend = FALSE)
-  return(p)
+  if (return_df){return(df.combined)}
+  else{return(p)}
 }
 # var ---------------------------------------------------------------------
-# todo: emomem_theme 
 emomem_theme <- theme_pubr(legend = "bottom")+
-  theme(text = element_text(size=18),
-        axis.text=element_text(size=18),
-        legend.text = element_text(size = 15),
+  theme(text = element_text(size=24),
+        axis.text=element_text(size=24),
+        legend.text = element_text(size = 20),
         axis.line = element_line(size = 0.7),
         legend.margin = margin(0, -10, 0, 0),
         legend.box.margin=margin(-15,-10,0,-10),
         legend.key.size = unit(2,"line"))
+palette2var <- c('black','grey')

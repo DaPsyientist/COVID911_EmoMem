@@ -193,15 +193,6 @@ ppc_dens_overlay(y_Rem_covid_MCMC_weighted, yrep_Rem_covid_MCMC_weighted_betareg
 describe_posterior(Rem_covid_MCMC_weighted)
 mcmc_intervals(as.array(Rem_covid_MCMC_weighted), pars = c('(Intercept)','Covid_Exp1','Covid_Exp2'))
 
-p_Rem_covid_MCMC_weighted <- Rem_covid_MCMC_weighted %>% plot_model_IVs_stan(variable_array = c('Covid_Exp1','Covid_Exp2'),
-                                              x_range = seq(1,5,by=0.2))
-p_Rem_covid_MCMC_weighted <- p_Rem_covid_MCMC_weighted + theme_bw() + 
-  ylab('Remembered Stress (Squeezed into 0-1)') +
-  xlab('Self-reported Stress') +
-  scale_color_manual(labels = c('T1 experienced','T2 current'), values = c('purple','green'))+
-  scale_fill_manual(values = c('purple','green'))+
-  labs(colour='')
-p_Rem_covid_MCMC_weighted
 
 # conduct the same analysis w/n weight to see whether the weight changes the results dramactically
 if (!exists("Rem_covid_MCMC_unweighted")) {
@@ -240,15 +231,7 @@ ppc_dens_overlay(y_Rem_911_MCMC_T2_weighted, yrep_Rem_911_MCMC_T2_weighted_betar
 #Summarize Posterior
 #plot_model(Rem_911_MCMC_T2_weighted, type = "pred", ci.lvl = .95, bpe.color = "red") 
 describe_posterior(Rem_911_MCMC_T2_weighted)
-p_Rem_911_MCMC_T2_weighted <- Rem_911_MCMC_T2_weighted %>% plot_model_IVs_stan(variable_array = c('prev_experience','curr_experience'),
-                                              x_range = seq(1,5,by=0.2))
-p_Rem_911_MCMC_T2_weighted <- p_Rem_911_MCMC_T2_weighted + theme_bw() + 
-  ylab('Remembered Stress (Squeezed into 0-1)') +
-  xlab('Self-reported Stress') +
-  scale_color_manual(labels = c('T1 experienced','T2 current'), values = c('purple','green'))+
-  scale_fill_manual(values = c('purple','green'))+
-  labs(colour='')
-p_Rem_911_MCMC_T2_weighted
+
 
 
 if (!exists("Rem_911_MCMC_T2_unweighted")) {
@@ -277,7 +260,7 @@ nine11_percent <- nine11_long_avg %>%
 #  summarise(mean=mean(Percent), sd=sd(Percent))
 
 if (!exists("Time_avg_911_MCMC_weighted")) {
-Time_avg_911_MCMC_weighted <- stan_glmer(Bdev ~ time + prev_experience + (1|Subject), 
+Time_avg_911_MCMC_weighted_reft <- stan_glmer(Bdev ~ time + prev_experience + (1|Subject), 
                              family = mgcv::betar, iter= niters, 
                              weights = num_weights_updated, seed = seed_no,
                              data = nine11_percent)
@@ -376,11 +359,6 @@ The results from weighted regression is quite interesting. At 1 year follow up, 
 
 Currently I do not know how to use one model and compare prev_experience and curr_experience at time points other than the baseline... to bypass this probelm, we fit the same model with different reference group and compare whether the 95% CI of prev exp and curr exp overlap with each other when the ref group is different
 
-```{r}
-mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref2), pars = c('prev_experience','curr_experience'))
-mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref3), pars = c('prev_experience','curr_experience'))
-mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref4), pars = c('prev_experience','curr_experience'))
-```
 
 Though there is a prev_experience:time interaction, it seems that at three time points, the predictive power of prev experience is larger than that of curr_experience.
 

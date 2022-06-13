@@ -14,7 +14,7 @@ Make sure you have the MCMC output (huge .RData file) included in the current di
 ```{r load dependency and datafile, include=FALSE}
 source('utils.R')
 # read in data
-load(file = "./911nCovid_StressMemory_new.rda") # this is not included in github repo
+load(file = "~/OneDrive - Harvard University/911nCovid_StressMemory_new.rda") # this is not included in github repo
 covid_wide <-  read.csv('../data/Complete_test_Dev_Exp_Only_Data_Manipulation.csv') #each row is one observation, T1 and T2 separated by prefix in the colnmae
 nine11_wide_avg <- read.csv('../data/df.emo.wide.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
 nine11_wide <- read.csv('../data/df.emo.wide_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is specific to one emotion
@@ -106,6 +106,31 @@ loading.prev_pca %>% merge(loading_header.prev_pca, by = c('Scale','Index')) %>%
 
 ```
 
+```{r correlate with subscale}
+covid_wide <- covid_wide %>% 
+  mutate(T1_PSS_total = rowSums(covid_wide %>% select(T1_PSS_1:T1_PSS_10)),
+         T2_PSS_total = T2_PSS_1 + T2_PSS_2 + T2_PSS_3 + 4 - T2_PSS_4 + 4 - T2_PSS_5 + T2_PSS_6 + 4 - T2_PSS_7 + 4 - T2_PSS_8 + T2_PSS_9 + T2_PSS_10,
+         T1_DASS_total_S = T1_DASS_1 + T1_DASS_6 + T1_DASS_8 + T1_DASS_11 + T1_DASS_12 + T1_DASS_14 + T1_DASS_18,
+         T1_DASS_total_A = T1_DASS_2 + T1_DASS_4 + T1_DASS_7 + T1_DASS_9 + T1_DASS_15 + T1_DASS_19 + T1_DASS_20,
+         T1_DASS_total_D = T1_DASS21_3_Depression + T1_DASS_5 + T1_DASS_13 +T1_DASS_16 + T1_DASS_17 + T1_DASS_21,
+         T2_DASS_total_S = T2_DASS_1 + T2_DASS_6 + T2_DASS_8 + T2_DASS_11 + T2_DASS_12 + T2_DASS_14 + T2_DASS_18,
+T2_DASS_total_A = T2_DASS_2 + T2_DASS_4 + T2_DASS_7 + T2_DASS_9 + T2_DASS_15 + T2_DASS_19 + T2_DASS_20,
+T2_DASS_total_D = T2_DASS_3 + T2_DASS_5 + T2_DASS_13 +T2_DASS_16 + T2_DASS_17 + T2_DASS_21,
+neg_PCA_T1 = -PCA_T1,
+neg_PCA_T2 = -PCA_T2
+           )
+
+r_pca <- covid_wide %>% select(neg_PCA_T1, neg_PCA_T2, T1_PSS_total, T1_DASS_total_A, T1_DASS_total_D, T1_DASS_total_S, 
+                      T2_PSS_total, T2_DASS_total_A, T2_DASS_total_D, T2_DASS_total_S) %>% as.matrix() %>% 
+  rcorr()
+r_pca_rowname <- c('T1 Subjective Well-being', 'T2 Subjective Well-being', 'T1 PSS', 'T1 DASS Anxiety', 'T1 DASS Depression', 'T1 DASS Stress','T2 PSS', 'T2 DASS Anxiety', 'T2 DASS Depression', 'T2 DASS Stress' )
+r_pca$r[,1:2] %>% round(3) %>% 
+  set_rownames(r_pca_rowname) %>% 
+  set_colnames(r_pca_rowname[1:2]) %>% 
+  write.csv('../Output/csv/r_pca.csv')
+```
+
+
 # Figure 1
 ```{r Figure 1}
 
@@ -132,12 +157,12 @@ fig1A <- covid_long_type_plot %>% ggplot(aes(x = MemType, y = Stress)) +
   stat_summary() 
 
 fig1A + emomem_theme + 
-  ylab('Average Stress Rating (1-5)') +
+  ylab('Average Stress') +
   xlab('') 
-ggsave('../Output/fig/pdf/fig_stress_compare.pdf',height=6,width=8)
-ggsave('../Output/fig/png/fig_stress_compare.png',height=6,width=8)
+ggsave('../Output/fig/pdf/fig_stress_compare.pdf',height=6,width=7)
+ggsave('../Output/fig/png/fig_stress_compare.png',height=6,width=7)
   
-# Fig 1B
+ # Fig 1B
 nine11_long_type <- nine11_long_avg_T2 %>% 
   mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
          B911_Exp2 = beta_squeeze((curr_experience-1)/4),
@@ -160,14 +185,172 @@ nine11_long_type_plot <- nine11_long_avg_T2 %>%
 fig1B <- nine11_long_type_plot %>% ggplot(aes(x = MemType, y = NegEmo)) + 
   stat_summary()
 fig1B + emomem_theme + 
-  ylab('Average negative emotion intensity (1-5)') +
+  ylab('Average Negative Emotion Intensity') +
   xlab('') 
-ggsave('../Output/fig/pdf/fig_negemo_compare.pdf',height=6,width=8)
-ggsave('../Output/fig/png/fig_negemo_compare.png',height=6,width=8)
+ggsave('../Output/fig/pdf/fig_negemo_compare.pdf',height=6,width=7)
+ggsave('../Output/fig/png/fig_negemo_compare.png',height=6,width=7)
   
 
 # Fig 1C
+# not quite sure how to deal with this...
 ```
+
+
+
+```{r Fig 2}
+# Fig 2A
+
+# because we want y to be on its original scale, we need to extract the data and can not use plot_model_IVs_stan wrapper
+df_Rem_covid_MCMC_weighted <- Rem_covid_MCMC_weighted %>% plot_model_IVs_stan(variable_array = c('Covid_Exp1','Covid_Exp2'),
+                                              x_range = seq(1,5,by=0.2), return_df = TRUE) %>% as.data.frame
+df_Rem_covid_MCMC_weighted <- df_Rem_covid_MCMC_weighted %>% mutate(
+  across(!starts_with("x"), 
+         function(x){return(reverse_beta_squeeze(x, n= length(covid_BRem$BCovid_Rem), likert_min_max = c(1,5)))},
+         .names = "{.col}_original"))
+ 
+
+p_Rem_covid_MCMC_weighted <- df_Rem_covid_MCMC_weighted %>% ggplot(aes_string(x = "x", y = "predicted_original", group = "x_name", color = "x_name")) +
+    geom_line() +
+    geom_ribbon(aes_string(ymin = "ymin_original",
+                           ymax = "ymax_original" , fill = "x_name"), alpha = 0.3, color=NA,
+                show.legend = FALSE)
+  
+
+p_Rem_covid_MCMC_weighted + 
+  ylab('Remembered Stress') +
+  ylim(1,5)+
+  xlab('Experienced Stress') +
+  scale_color_manual(labels = c('Previous','Current (after 1 year)'), values = palette2var)+
+  scale_fill_manual(values = palette2var)+
+  labs(colour='') + 
+  emomem_theme
+
+ggsave('../Output/fig/pdf/fig_recency_covid.pdf',height=6,width=6)
+ggsave('../Output/fig/png/fig_recency_covid.png',height=6,width=6)
+
+# Fig 2C
+df_Rem_911_MCMC_T2_weighted <- Rem_911_MCMC_T2_weighted %>% plot_model_IVs_stan(variable_array = c('prev_experience','curr_experience'),
+                                              x_range = seq(1,5,by=0.2), return_df = TRUE) %>% as.data.frame
+
+df_Rem_911_MCMC_T2_weighted <- df_Rem_911_MCMC_T2_weighted %>% mutate(
+across(!starts_with("x"), 
+         function(x){return(reverse_beta_squeeze(x, n= length(nine11_BRem_T2$B911_Rem), likert_min_max = c(1,5)))},
+         .names = "{.col}_original"))
+ 
+p_Rem_911_MCMC_T2_weighted <- df_Rem_911_MCMC_T2_weighted %>% ggplot(aes_string(x = "x", y = "predicted_original", group = "x_name", color = "x_name")) +
+    geom_line() +
+    geom_ribbon(aes_string(ymin = "ymin_original",
+                           ymax = "ymax_original" , fill = "x_name"), alpha = 0.3, color=NA,
+                show.legend = FALSE)
+
+p_Rem_911_MCMC_T2_weighted + 
+  ylab('Remembered Negative Emotions') +
+  ylim(1,5)+
+  xlab('Experienced Negative Emotions') +
+  scale_color_manual(labels = c('Previous','Current (after 1 year)'), values = palette2var)+
+  scale_fill_manual(values = palette2var)+
+  labs(colour='') +
+  emomem_theme
+ggsave('../Output/fig/pdf/fig_recency_911_T2.pdf',height=6,width=6)
+ggsave('../Output/fig/png/fig_recency_911_T2.png',height=6,width=6)
+
+```
+
+```{r mcmc interval}
+# Fig 2B and 2D
+p_coef_covid_weighted <- mcmc_intervals(as.array(Rem_covid_MCMC_weighted), pars = c('Covid_Exp1','Covid_Exp2'),
+                                        prob_outer = 0.95)
+
+p_coef_911_weighted_T2 <- mcmc_intervals(as.array(Rem_911_MCMC_T2_weighted), pars = c('prev_experience','curr_experience'), prob_outer = 0.95)
+
+p_coef_covid_weighted + emomem_theme + 
+  xlab('Coefficient Estimate') +
+  scale_y_discrete(breaks = c('Covid_Exp1','Covid_Exp2'),
+                   labels = c('Previous','Current\n(after 1 year)'))
+ggsave('../Output/fig/pdf/fig_recency_coef_covid.pdf',height=6,width=6)
+ggsave('../Output/fig/png/fig_recency_coef_covid.png',height=6,width=6)
+  
+p_coef_911_weighted_T2 + emomem_theme +
+  xlab('Coefficient Estimate') +
+  scale_y_discrete(breaks = c('prev_experience','curr_experience'),
+                   labels = c('Previous','Current\n(after 1 year)'))
+ggsave('../Output/fig/pdf/fig_recency_coef_911.pdf',height=6,width=6)
+ggsave('../Output/fig/png/fig_recency_coef_911.png',height=6,width=6)
+
+mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref2), pars = c('prev_experience','curr_experience'))
+mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref3), pars = c('prev_experience','curr_experience'))
+mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref4), pars = c('prev_experience','curr_experience'))
+```
+
+```{r}
+
+
+covid_long_pca <- covid_wide %>% pivot_longer(cols = c('neg_PCA_T1','neg_PCA_T2'),
+                            names_to = 'time',
+                            values_to = 'Subjective_Well_being') %>% 
+  select(Subject, time, Subjective_Well_being) %>% 
+  mutate(time = factor(time, levels = c('neg_PCA_T1','neg_PCA_T2'),
+                       labels = c('Previous','Current (after 1 year)')))
+
+p_covid_long_pca <- covid_long_pca %>% ggplot(aes(x=time, y=Subjective_Well_being)) + 
+  stat_summary() 
+p_covid_long_pca + emomem_theme + 
+  xlab('Time') + ylab('Subjective Well-being')
+
+ggsave('../Output/fig/pdf/supp_pca.pdf',height=6,width=7)
+ggsave('../Output/fig/png/supp_pca.png',height=6,width=7)
+
+```
+
+
+
+```{r well-being}
+df_delta_EmoWell <- covid_delta_EmoWell_MCMC %>% plot_model_IVs_stan(variable_array = c('emo_well_being_delta'), x_range = seq(-10,10,by = 0.5), return_df = TRUE) %>% as.data.frame
+
+df_delta_EmoWell <- df_delta_EmoWell %>% mutate(
+  across(!starts_with("x"),
+         function(x){return(reverse_beta_squeeze(x, n=length(covid_percent %>% filter(!is.na(Covid_Exp1))),
+                                                 likert_min_max = c(-4,4)))},
+         .names = "{.col}_original"))
+
+p_delta_EmoWell <- df_delta_EmoWell %>% 
+ggplot(aes_string(x = "x", y = "predicted_original", group = "x_name", color = "x_name")) +
+    geom_line(color = 'black') +
+    geom_ribbon(aes_string(ymin = "ymin_original",
+                           ymax = "ymax_original" , fill = "x_name"),fill='black', alpha = 0.3, color=NA,
+                show.legend = FALSE)
+
+p_delta_EmoWell + 
+  geom_vline(xintercept = 0, linetype = 'dashed') + 
+  xlab('Emotional Well-being\nImprovement in 1 Year') +
+  ylab('Memory Deviation') + 
+  emomem_theme + 
+  theme(legend.position = 'none')
+
+ggsave('../Output/fig/pdf/delta_wellbeing.pdf',height=6,width=6)
+ggsave('../Output/fig/png/delta_wellbeing.png',height=6,width=6)
+
+```
+
+```{r}
+p_911_avg <- nine11_percent %>% 
+  mutate(time = factor(time, levels = c(2:4),
+                       labels = c('1 year','5 years','10 years'))) %>% 
+  ggplot(aes(x=time, y=memdev)) + 
+    stat_summary() + 
+    stat_summary(geom='line', aes(group=1))
+
+
+p_911_avg + ylab('Memory Deviation') +
+  xlab('Time Interval') +
+  emomem_theme
+
+ggsave('../Output/fig/pdf/avg_911_time',height=6,width=6)
+ggsave('../Output/fig/png/avg_911_time.png',height=6,width=6)
+
+```
+
+
 
 
 

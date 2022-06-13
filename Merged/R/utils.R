@@ -93,6 +93,53 @@ plot_model_IVs_stan <- function(your_model, variable_array, x_range=seq(-2.5, 2.
   if (return_df){return(df.combined)}
   else{return(p)}
 }
+
+plot_model_int_catcont <- function(your_model, variable_array, fct_array, x_range=seq(-2.5, 2.5, by = 0.5), fct_range='all',ymin_threshold = NA,
+                                   transform_x=TRUE, x_mean_scale_array=c(0,1)){
+  
+  #' plot predicted DV as a function of the interaction between a continuous IV and a categorical IV (needs to be a factor)
+  #' inputs:
+  #'         your model: fitted model that sjPlot() accept as an input
+  #'         variable_array: a string array for the continuous IV
+  #'         fct_array: a string array for the categorical IV
+  #'         x_range: the range and sample frequency of the continuous IV. optional.
+  #'         fct_range: the range of the categorical IV. optional.
+  #'         ymin_threshold: the minimum DV allowed. optional.
+  #' output:
+  #'         plot object (can be modified by ggplot2)
+  
+  df.combined <- data.frame()
+  variable_array_range <- paste0(variable_array, '[',
+                                 paste0(x_range, collapse = ','),
+                                 ']', collapse = '')
+  predict.loop <- your_model %>%
+    get_model_data(type = "pred", terms = c(variable_array_range, fct_array))
+  if (transform_x){
+    predict.loop$x <- x_mean_scale_array[1] + predict.loop$x * x_mean_scale_array[2]
+  }
+  df.combined <- predict.loop %>% select(x, predicted, conf.low, conf.high,
+                                         group_col) %>%
+    mutate(x_name = variable_array) %>%
+    mutate(ymin = conf.low,
+           ymax = conf.high,
+           !!fct_array := group_col)
+  
+  if (fct_range != 'all'){
+    df.combined <- df.combined %>% filter(group_col %in% fct_range)
+  }
+  
+  if (!is.na(ymin_threshold)){
+    df.combined$ymin[df.combined$ymin < ymin_threshold] <- ymin_threshold
+  }
+  
+  p <- df.combined %>% ggplot(aes_string(x = "x", y = "predicted", color = fct_array)) +
+    geom_ribbon(aes_string(ymin = "ymin",
+                           ymax = "ymax" , fill = fct_array), alpha = 0.2, color=NA, show.legend = FALSE) +
+    geom_line() +
+    xlab(variable_array)
+  
+  return(p)
+}
 # var ---------------------------------------------------------------------
 emomem_theme <- theme_pubr(legend = "bottom")+
   theme(text = element_text(size=24),
@@ -103,3 +150,4 @@ emomem_theme <- theme_pubr(legend = "bottom")+
         legend.box.margin=margin(-15,-10,0,-10),
         legend.key.size = unit(2,"line"))
 palette2var <- c('black','grey')
+palette3var <- c('black','grey','darkred')

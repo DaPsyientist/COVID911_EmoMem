@@ -261,25 +261,28 @@ ggsave('../Output/fig/png/fig_recency_911_T2.png',height=6,width=6)
 p_coef_covid_weighted <- mcmc_intervals(as.array(Rem_covid_MCMC_weighted), pars = c('Covid_Exp1','Covid_Exp2'),
                                         prob_outer = 0.95)
 
+p_coef_covid_weighted_area <- mcmc_areas(as.array(Rem_covid_MCMC_weighted), pars = c('Covid_Exp1','Covid_Exp2'),
+                                        prob = 0.95)
+
+
 p_coef_911_weighted_T2 <- mcmc_intervals(as.array(Rem_911_MCMC_T2_weighted), pars = c('prev_experience','curr_experience'), prob_outer = 0.95)
 
-p_coef_covid_weighted + emomem_theme + 
+p_coef_911_weighted_T2_area <- mcmc_areas(as.array(Rem_911_MCMC_T2_weighted), pars = c('prev_experience','curr_experience'), prob = 0.95)
+
+p_coef_covid_weighted_area + emomem_theme + 
   xlab('Coefficient Estimate') +
   scale_y_discrete(breaks = c('Covid_Exp1','Covid_Exp2'),
                    labels = c('Previous','Current\n(after 1 year)'))
-ggsave('../Output/fig/pdf/fig_recency_coef_covid.pdf',height=6,width=6)
-ggsave('../Output/fig/png/fig_recency_coef_covid.png',height=6,width=6)
+ggsave('../Output/fig/pdf/fig_recency_coef_covid_area.pdf',height=6,width=6)
+ggsave('../Output/fig/png/fig_recency_coef_covid_area.png',height=6,width=6)
   
-p_coef_911_weighted_T2 + emomem_theme +
+p_coef_911_weighted_T2_area + emomem_theme +
   xlab('Coefficient Estimate') +
   scale_y_discrete(breaks = c('prev_experience','curr_experience'),
                    labels = c('Previous','Current\n(after 1 year)'))
-ggsave('../Output/fig/pdf/fig_recency_coef_911.pdf',height=6,width=6)
-ggsave('../Output/fig/png/fig_recency_coef_911.png',height=6,width=6)
+ggsave('../Output/fig/pdf/fig_recency_coef_911_area.pdf',height=6,width=6)
+ggsave('../Output/fig/png/fig_recency_coef_911_area.png',height=6,width=6)
 
-mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref2), pars = c('prev_experience','curr_experience'))
-mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref3), pars = c('prev_experience','curr_experience'))
-mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref4), pars = c('prev_experience','curr_experience'))
 ```
 
 ```{r}
@@ -332,7 +335,8 @@ ggsave('../Output/fig/png/delta_wellbeing.png',height=6,width=6)
 
 ```
 
-```{r}
+```{r fig3}
+# Fig 3
 p_911_avg <- nine11_percent %>% 
   mutate(time = factor(time, levels = c(2:4),
                        labels = c('1 year','5 years','10 years'))) %>% 
@@ -349,6 +353,167 @@ ggsave('../Output/fig/pdf/avg_911_time',height=6,width=6)
 ggsave('../Output/fig/png/avg_911_time.png',height=6,width=6)
 
 ```
+
+```{r fig4}
+# Fig 4A
+x_range <- seq(1,5,0.25) %>% paste0(collapse = ',')
+df_Rem_911_prev <- Rem_911_MCMC_weighted_ref2 %>% get_model_data(type='pred', terms=c(paste0('prev_experience[',x_range,']'),'time')) %>% 
+  as.data.frame
+
+df_Rem_911_prev <- df_Rem_911_prev %>% mutate(across(predicted:conf.high,
+                             function(x){return(reverse_beta_squeeze(x, length(nine11_BRem$stress_memory), likert_min_max = c(1,5)))},
+                             .names = "{.col}_original"))
+
+df_delta_EmoWell <- df_delta_EmoWell %>% mutate(
+  across(!starts_with("x"),
+         function(x){return(reverse_beta_squeeze(x, n=length(covid_percent %>% filter(!is.na(Covid_Exp1))),
+                                                 likert_min_max = c(-4,4)))},
+         .names = "{.col}_original"))
+
+p_Rem_911_prev <- df_Rem_911_prev %>% ggplot(aes(x=x, y=predicted_original, group=group, color=group)) +
+  geom_line()+
+  geom_ribbon(aes(ymin=conf.low_original, ymax=conf.high_original,
+              fill=group),alpha=0.3, color=NA, show.legend=FALSE)
+
+p_Rem_911_prev + 
+  ylab('Remembered Negative Emotions') + 
+  xlab('Previous Negative Emotions') + 
+  ylim(1,5)+
+  scale_color_manual(labels = c('1 year','5 years', '10 years'), values = palette3var)+
+  scale_fill_manual(values = palette3var)+
+  labs(colour='') + 
+  emomem_theme +
+  theme(legend.position = 'none')
+
+ggsave('../Output/fig/pdf/Rem_prev.pdf',height=6,width=6)
+ggsave('../Output/fig/png/Rem_prev.png',height=6,width=6)
+  
+  
+
+```
+
+```{r}
+df_Rem_911_curr <- Rem_911_MCMC_weighted_ref2 %>% get_model_data(type='pred', terms=c(paste0('curr_experience[',x_range,']'),'time')) %>% 
+  as.data.frame
+
+df_Rem_911_curr <- df_Rem_911_curr %>% mutate(across(predicted:conf.high,
+                             function(x){return(reverse_beta_squeeze(x, length(nine11_BRem$stress_memory), likert_min_max = c(1,5)))},
+                             .names = "{.col}_original"))
+
+df_delta_EmoWell <- df_delta_EmoWell %>% mutate(
+  across(!starts_with("x"),
+         function(x){return(reverse_beta_squeeze(x, n=length(covid_percent %>% filter(!is.na(Covid_Exp1))),
+                                                 likert_min_max = c(-4,4)))},
+         .names = "{.col}_original"))
+
+p_Rem_911_curr <- df_Rem_911_curr %>% ggplot(aes(x=x, y=predicted_original, group=group, color=group)) +
+  geom_line()+
+  geom_ribbon(aes(ymin=conf.low_original, ymax=conf.high_original,
+              fill=group),alpha=0.3, color=NA, show.legend=FALSE)
+
+p_Rem_911_curr + 
+  ylab('Remembered Negative Emotions') + 
+  xlab('Current Negative Emotions') + 
+  ylim(1,5)+
+  scale_color_manual(labels = c('1 year','5 years', '10 years'), values = palette3var)+
+  scale_fill_manual(values = palette3var)+
+  labs(colour='') + 
+  emomem_theme +
+  theme(legend.position = 'none')
+
+ggsave('../Output/fig/pdf/Rem_curr.pdf',height=6,width=6)
+ggsave('../Output/fig/png/Rem_curr.png',height=6,width=6)
+  
+p_Rem_911_curr + 
+  ylab('Remembered Negative Emotions') + 
+  xlab('Current Negative Emotions') + 
+  ylim(1,5)+
+  scale_color_manual(labels = c('1 year','5 years', '10 years'), values = palette3var)+
+  scale_fill_manual(values = palette3var)+
+  labs(colour='') + 
+  emomem_theme 
+  
+ggsave('../Output/fig/pdf/Rem_curr_legend.pdf',height=6,width=6)
+ggsave('../Output/fig/png/Rem_curr_legend.png',height=6,width=6)
+  
+```
+
+```{r}
+
+# polygon 
+p_ref2 <- mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref2), pars = c('prev_experience','curr_experience'))
+
+p_ref3 <- mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref3), pars = c('prev_experience','curr_experience'))
+p_ref4 <- mcmc_intervals(as.array(Rem_911_MCMC_weighted_ref4), pars = c('prev_experience','curr_experience'))
+
+p_ref2_area <- mcmc_areas(as.array(Rem_911_MCMC_weighted_ref2), pars = c('prev_experience','curr_experience'), prob=0.95)
+
+p_ref3_area <- mcmc_areas(as.array(Rem_911_MCMC_weighted_ref3), pars = c('prev_experience','curr_experience'), prob = 0.95)
+p_ref4_area <- mcmc_areas(as.array(Rem_911_MCMC_weighted_ref4), pars = c('prev_experience','curr_experience'), prob = 0.95)
+
+
+p_ref2_area + 
+  xlim(0.3, 0.8) +
+  emomem_theme +
+  scale_y_discrete(breaks = c('prev_experience','curr_experience'),
+                   labels = c('Previous','Current'))+
+  expand_limits(x=0, y=0)+
+  theme(axis.ticks.x = element_blank(),
+         axis.text.x = element_blank(),
+         axis.line.x = element_blank())
+ggsave('../Output/fig/pdf/ref2_area.pdf',height=2,width=6)
+ggsave('../Output/fig/png/ref2_area.png',height=2,width=6)
+  
+p_ref3_area +
+  xlim(0.3, 0.8) +
+  emomem_theme + 
+  scale_y_discrete(breaks = c('prev_experience','curr_experience'),
+                   labels = c('Previous','Current'))+
+  expand_limits(x=0, y=0)+
+    theme(axis.ticks.x = element_blank(),
+         axis.text.x = element_blank(),
+         axis.line.x = element_blank())
+
+ggsave('../Output/fig/pdf/ref3_area.pdf',height=2,width=6)
+ggsave('../Output/fig/png/ref3_area.png',height=2,width=6)
+  
+p_ref4_area + 
+  xlim(0.3, 0.8) +
+  emomem_theme +
+  scale_y_discrete(breaks = c('prev_experience','curr_experience'),
+                   labels = c('Previous','Current'))+
+  expand_limits(x=0, y=0)+
+    theme(axis.ticks.x = element_blank(),
+         axis.text.x = element_blank(),
+         axis.line.x = element_blank())
+
+ggsave('../Output/fig/pdf/ref4_area.pdf',height=2,width=6)
+ggsave('../Output/fig/png/ref4_area.png',height=2,width=6)
+
+p_ref4_area + 
+  xlim(0.3, 0.8) +
+  emomem_theme +
+  scale_y_discrete(breaks = c('prev_experience','curr_experience'),
+                   labels = c('Previous','Current'))+
+  expand_limits(x=0, y=0) +
+  xlab('Coefficient Estimate')
+ggsave('../Output/fig/pdf/ref4_area_axis.pdf',height=3,width=6)
+ggsave('../Output/fig/png/ref4_area_axis.png',height=3,width=6)
+
+
+
+```
+
+```{r}
+Rem_911_MCMC_weighted_ref2 %>% describe_posterior()
+p_ref2 + emomem_theme
+p_ref3 + emomem_theme
+p_ref4 + emomem_theme
+```
+
+
+
+
 
 
 

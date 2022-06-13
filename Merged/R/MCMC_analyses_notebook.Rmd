@@ -260,7 +260,7 @@ nine11_percent <- nine11_long_avg %>%
 #  summarise(mean=mean(Percent), sd=sd(Percent))
 
 if (!exists("Time_avg_911_MCMC_weighted")) {
-Time_avg_911_MCMC_weighted_reft <- stan_glmer(Bdev ~ time + prev_experience + (1|Subject), 
+Time_avg_911_MCMC_weighted <- stan_glmer(Bdev ~ time + prev_experience + (1|Subject), 
                              family = mgcv::betar, iter= niters, 
                              weights = num_weights_updated, seed = seed_no,
                              data = nine11_percent)

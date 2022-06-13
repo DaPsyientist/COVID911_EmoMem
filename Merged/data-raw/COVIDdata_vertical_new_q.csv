@@ -1,0 +1,345 @@
+Header,Item,Subscale,reverse score,Response type
+Researcher,,,,Your name
+StudyName,,,,Name of your study
+StudyDate,,,,*Please convert to short date format (M/D/YY) in Excel
+SubjectID_Prolific_MTurk,Prolific/MTurk ID,,, Prolific or MTurk ID for subject
+Platform,Prolific or MTurk,,,Prolific/MTurk
+Demographics_age,Age,,,numerical
+Demographics_gender,Gender,,,Male/Female/Other
+Demographics_HispanicLatino,Hispanic / Latino,,,Yes/No
+Demographics_race,Race,,,"American Indian/Alaskan Native, Asian, Black/African American, Native Hawaiian/Other Pacific Islander, White/Caucasian"
+Demographics_USA,Do you live in the United States of America?,,,Yes/No
+Demographics_state,In which state or territory do you live?,,,"Alabama, Alaska, American Samoa, Arizona, Arkansas, California, Colorado, Connecticut, Delaware, District of Columbia, Florida, Georgia, Guam, Hawaii, Idaho, Illinois, Indiana, Iowa, Kansas, Kentucky, Louisiana, Maine, Maryland, Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Montana, Nebraska, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Carolina, North Dakota, Northern Mariana Islands, Ohio, Oklahoma, Oregon, Pennsylvania, Puerto Rico, Rhode Island, South Carolina, South Dakota, Tennessee, Texas, U.S. Virgin Islands, Utah, Vermont, Virginia, Washington, West Virginia, Wisconsin, Wyoming"
+Demographics_town,In which town/city do you live?,,,free response
+Demographics_ZIPCode,What is your postal/ZIP code?,,,numeric
+SES_ladderCommunity,"Please indicate the number corresponding to the rung where you think you stand at this time in your life, relative to other people IN YOUR COMMUNITY.",,,"1 to 10 (data may appear as e.g., 4</div)"
+SES_ladderCountry,"Please indicate the number corresponding to the rung where you think you stand at this time in your life, relative to other people IN YOUR COUNTRY.",,,1 to 10
+SES_educationLevel,What is the highest grade (or year) of regular school you have completed?,,,01-20+
+SES_educationDegree,What is the highest degree you earned?,,,"High school diploma or equivalency (GED), Associate degree (junior college), Bachelor's degree, Master's degree, Doctorate, Professional (MD, JD, DDS, etc.), Other specify, None of the above (less than high school)"
+COVID_1_selfisolate,"Are you self-isolating to help prevent the spread of COVID-19 (e.g., staying at home, social distancing, etc.)?",,,Yes/No
+COVID_2_days_selfisolate,How many days has it been since you started self-isolating?,,,numerical
+COVID_3_stress_selfisolate,How stressful has it been for you to self-isolate?,,,Not at all stressful 1; 2;  Somewhat stressful 3; 4; Extremely stressful 5
+COVID_4_self_symptoms,"Do you currently have any symptoms associated with COVID-19 (e.g., fever, cough, shortness of breath)?",,,Yes/No
+COVID_5_others_symptoms,Do any of your close friends or family members currently have any symptoms associated with COVID-19?,,,Yes/No
+COVID_6_self_worriedInfected,How worried are you about the possibility that you might become infected with COVID-19?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_7_oth_worriedInfected,How worried are you about the possibility that any of your close friends or family members might become infected with COVID-19?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_8_self_riskgroup,Do you belong to a group at risk of developing severe or life-threatening symptoms due to COVID-19?,,,Yes/No
+COVID_9_oth_riskgroup,Do any of your close friends or family members belong to a group at risk of developing severe or life-threatening symptoms due to COVID-19?,,,Yes/No
+COVID_10_self_firstresp,Are you currently serving as a first responder?,,,Yes/No
+COVID_11_oth_firstresp,Are any of your close friends or family members currently serving as a first responder?,,,Yes/No
+COVID_12_communityChange_1month,"In 1 month from now, I think the situation in my community will be…",,,much better than right now 1; 2; about the same as right now 3; 4; much worse than right now 5
+COVID_13_communityChange_2months,"In 2 months from now, I think the situation in my community will be…",,,much better than right now 1; 2; about the same as right now 3; 4; much worse than right now 5
+COVID_14_communityChange_6months,"In 6 months from now, I think the situation in my community will be…",,,much better than right now 1; 2; about the same as right now 3; 4; much worse than right now 5
+COVID_15_communityChange_12months,"In 12 months from now, I think the situation in my community will be…",,,much better than right now 1; 2; about the same as right now 3; 4; much worse than right now 5
+COVID_16_countryChange_1month,"In 1 month from now, I think the situation in my country will be…",,,much better than right now 1; 2; about the same as right now 3; 4; much worse than right now 5
+COVID_17_countryChange_2months,"In 2 months from now, I think the situation in my country will be…",,,much better than right now 1; 2; about the same as right now 3; 4; much worse than right now 5
+COVID_18_countryChange_6months,"In 6 months from now, I think the situation in my country will be…",,,much better than right now 1; 2; about the same as right now 3; 4; much worse than right now 5
+COVID_19_countryChange_12months,"In 12 months from now, I think the situation in my country will be…",,,much better than right now 1; 2; about the same as right now 3; 4; much worse than right now 5
+COVID_20_stress_lifechanges_1,How much stress are you experiencing right now as a result of...decreased in-person visits to close friends and family?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_21_stress_lifechanges_2,"How much stress are you experiencing right now as a result of...decreased virtual contact with close friends or family (e.g., phone calls, texts, video chats, etc.)?",,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_22_stress_lifechanges_3,How much stress are you experiencing right now as a result of...increased tension with people in your household?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_23_stress_lifechanges_4,How much stress are you experiencing right now as a result of...increased tension with others outside of your household?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_24_stress_lifechanges_5,How much stress are you experiencing right now as a result of...a loss of employment?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_25_stress_lifechanges_6,How much stress are you experiencing right now as a result of...problems obtaining grocery items?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_26_stress_lifechanges_7,"How much stress are you experiencing right now as a result of...problems paying for bills (e.g., housing, food, medical bills)?",,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_27_stress_lifechanges_8,.How much stress are you experiencing right now as a result of…problems accessing healthcare?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_28_stress_lifechanges_9,How much stress are you experiencing right now as a result of...problems receiving your usual paycheck?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_29_stress_lifechanges_10,How much stress are you experiencing right now as a result of...difficulties combining childcare with work?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_30_stress_lifechanges_11,How much stress are you experiencing right now as a result of...obstacles that make work more difficult?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_31_stress_lifechanges_12,How much stress are you experiencing right now as a result of...an increased work load?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_32_stress_lifechanges_13,How much stress are you experiencing right now as a result of...working from home?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_33_stress_lifechanges_14,How much stress are you experiencing right now as a result of...decreased physical exercise?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_34_stress_lifechanges_15,How much stress are you experiencing right now as a result of...decreased participation in your usual leisure activities?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_35_stress_lifechanges_16,How much stress are you experiencing right now as a result of...a decrease in new fun activities?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_36_stress_lifechanges_17,How much stress are you experiencing right now as a result of...boredom?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_37_stress_beliefs_1,How much stress are you experiencing right now because you believe that… the government is not taking appropriate action to combat issues surrounding COVID-19?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_38_stress_beliefs_2,How much stress are you experiencing right now because you believe that...criminality rates have increased?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_39_stress_beliefs_3,How much stress are you experiencing right now because you believe that...there is currently an economic crisis?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_40_stress_beliefs_4,"How much stress are you experiencing right now because you believe that…other people are not following public health guidelines to prevent the spread of COVID-19 (e.g., washing hands, social distancing, etc.)?",,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_41_stress_beliefs_5,How much stress are you experiencing right now because you believe that...life as we know it is not the same?,,,No stress at all 1; 2; Some stress 3; 4; A great deal of stress 5; N/A
+COVID_42_worryfuture_experien_1,How worried are you that in the future you will experience… decreased in-person visits to close friends or family?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_43_worryfuture_experien_2,"How worried are you that in the future you will experience…...decreased virtual contact with close friends or family (e.g., phone calls, texts, video chats, etc.)?",,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_44_worryfuture_experien_3,How worried are you that in the future you will experience…...increased tension with people in your household?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_45_worryfuture_experien_4,How worried are you that in the future you will experience…...increased tension with others outside of your household?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_46_worryfuture_experien_5,How worried are you that in the future you will experience…...a loss of employment?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_47_worryfuture_experien_6,How worried are you that in the future you will experience…...problems obtaining grocery items?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_48_worryfuture_experien_7,"How worried are you that in the future you will experience…...problems paying for bills (e.g., housing, food, medical bills)?",,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_49_worryfuture_experien_8,How worried are you that in the future you will experience…...problems accessing healthcare?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_50_worryfuture_experien_9,How worried are you that in the future you will experience…...problems receiving your usual paycheck?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_51_worryfuture_experien_10,How worried are you that in the future you will experience…...difficulties combining childcare with work?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_52_worryfuture_experien_11,How worried are you that in the future you will experience…...obstacles that make work more difficult?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_53_worryfuture_experien_12,How worried are you that in the future you will experience…...an increased work load?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_54_worryfuture_experien_13,How worried are you that in the future you will experience…...working from home?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_55_worryfuture_experien_14,How worried are you that in the future you will experience…...decreased physical exercise?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_56_worryfuture_experien_15,How worried are you that in the future you will experience…...decreased participation in your usual leisure activities?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_57_worryfuture_experien_16,How worried are you that in the future you will experience…...a decrease in new fun activities?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_58_worryfuture_experien_17,How worried are you that in the future you will experience…...boredom?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_59_worryfuture_society_1,How worried are you that in the future… the government will not take appropriate action to combat issues surrounding COVID-19?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_60_worryfuture_society_2,How worried are you that in the future...criminality rates will increase?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_61_worryfuture_society_3,How worried are you that in the future...there will be an economic crisis?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_62_worryfuture_society_4,"How worried are you that in the future…other people will not follow public health guidelines to prevent the spread of COVID-19 (e.g., washing hands, social distancing, etc.)?",,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_63_worryfuture_society_5,How worried are you that in the future...life as we knew will never be the same?,,,Not at all worried 1; 2; Somewhat worried 3; 4; Extremely worried 5
+COVID_64_changesCOVID_1,"Compared to how you were before the COVID-19 pandemic, how often do you feel… that you lack companionship?",,,Much less than usual 1; 2; About the same as usual 3; 4; Much more than usual 5
+COVID_65_changesCOVID_2,"Compared to how you were before the COVID-19 pandemic, how often do you feel...that there is no one you can turn to?",,,Much less than usual 1; 2; About the same as usual 3; 4; Much more than usual 5
+COVID_66_changesCOVID_3,"Compared to how you were before the COVID-19 pandemic, how often do you feel...alone?",,,Much less than usual 1; 2; About the same as usual 3; 4; Much more than usual 5
+COVID_67_changesCOVID_4_r,"Compared to how you were before the COVID-19 pandemic, how often do you feel...close to people?",,r,Much less than usual 1; 2; About the same as usual 3; 4; Much more than usual 5
+COVID_68_changesCOVID_5,"Compared to how you were before the COVID-19 pandemic, how often do you feel...isolated from others?",,,Much less than usual 1; 2; About the same as usual 3; 4; Much more than usual 5
+COVID_69_changesCOVID_6_r,"Compared to how you were before the COVID-19 pandemic, how often do you feel...you can find companionship when you want it?",,r,Much less than usual 1; 2; About the same as usual 3; 4; Much more than usual 5
+COVID_70_changesCOVID_7_r,"Compared to how you were before the COVID-19 pandemic, how often do you feel...that there are people you can talk to?",,r,Much less than usual 1; 2; About the same as usual 3; 4; Much more than usual 5
+COVID_71_newsCOVID,"About how much time each day do you spend consuming (i.e., watching, reading, listening to) news or other forms of media (e.g., Twitter, Youtube, newspapers, etc.) regarding COVID-19?",,,Less than 30 minutes; 30 minutes - 1 hour; 1-2 hours; 2-4 hours; 4+ hours
+COVID_72_commCOVID,About how much time each day do you spend communicating with others about COVID-19?,,,Less than 30 minutes; 30 minutes - 1 hour; 1-2 hours; 2-4 hours; 4+ hours
+COVID_73_avoidNews,Do you try to avoid news about the COVID-19 outbreak?,,,Not at all 1; 2; Sometimes 3; 4; As much as possible 5
+COVID_74_changeBehav_1,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following... I wash my hands",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_75_changeBehav_2_r,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I touch my face",,r,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_76_changeBehav_3,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I restrict my visits to at-risk individuals",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_77_changeBehav_4,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following…I restrict my visits to non-at-risk individuals",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_78_changeBehav_5,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following…I keep at a 6-feet distance",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_79_changeBehav_6,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following…I experience feelings of stress and anxiety",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_80_changeBehav_7,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following…I have problems concentrating",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_81_changeBehav_8,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I have problems sleeping (e.g., waking up often, not sleeping enough, etc.)",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_82_changeBehav_9,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I experience gastrointestinal discomfort (e.g., stomach pain, diarrhea, constipation, etc.)…",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_83_changeBehav_10,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I eat unhealthy snacks",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_84_changeBehav_11,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I drink alcohol",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_85_changeBehav_12,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I smoke cigarettes",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_86_changeBehav_13_r,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I go grocery shopping",,r,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_87_changeBehav_14,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I buy additional quantities of certain grocery items (e.g., multiple loaves of bread, several rolls of toilet paper)",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_88_changeBehav_15,"Compared to your usual life before the start of the COVID-19 pandemic, how often do you experience or take part in the following...I buy foods that you can store for a long time (e.g., canned goods, dried foods, non-perishables, etc.)",,,much less than usual 1; 2; about the same as usual 3; 4; much more than usual 5; N/A
+COVID_89_counsel_mental,Have you ever sought counseling or treatment for mental health difficulties?,,,Yes/No
+COVID_90_diag_mental,Have you ever been diagnosed with a mental health condition?,,,Yes/No
+COVID_91_counsel_stress,Have you ever sought counseling or treatment for stress or anxiety?,,,Yes/No
+COVID_92_diag_anx,Have you ever been diagnosed with an anxiety or stress-related mental health condition?,,,Yes/No
+DASS21_1_Stress,I found it hard to wind down,Stress,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_2_Anxiety,I was aware of dryness of my mouth,Anxiety,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_3_Depression,I couldn't seem to experience any positive feeling at all,Depression,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_4_Anxiety,"I experienced breathing difficulty (e.g., excessively rapid breathing, breathlessness in the absence of physical exertion)",Anxiety,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_5_Depression,I found it difficult to work up the initiative to do things,Depression,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_6_Stress,I tended to over-react to situations,Stress,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_7_Anxiety,"I experienced trembling (e.g., in the hands)",Anxiety,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_8_Stress,I felt that I was using a lot of nervous energy,Stress,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_9_Anxiety,I was worried about situations in which I might panic and make a fool of myself,Anxiety,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_10_Depression,I felt that I had nothing to look forward to,Depression,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_11_Stress,I found myself getting agitated,Stress,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_12_Stress,I found it difficult to relax,Stress,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_13_Depression,I felt down-hearted and blue,Depression,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_14_Stress,I was intolerant of anything that kept me from getting on with what I was doing,Stress,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_15_Anxiety,I felt I was close to panic,Anxiety,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_16_Depression,I was unable to become enthusiastic about anything,Depression,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_17_Depression,I felt I wasn't worth much as a person,Depression,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_18_Stress,I felt that I was rather touchy,Stress,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_19_Anxiety,"I was aware of the action of my heart in the absence of physical exertion (e.g., sense of heart rate increase, heart missing a beat)",Anxiety,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_20_Anxiety,I felt scared without any good reason,Anxiety,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+DASS21_21_Depression,I felt that life was meaningless,Depression,,"Did not apply to me at all; Applied to me to some degree, or some of the time; Applied to me to a considerable degree, or a good part of time; Applied to me very much, or most of the time
+"
+IUS_1_Factor1,Uncertainty stops me from having a firm opinion,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_2_Factor1,Being uncertain means that a person is disorganized,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_3_Factor1,Uncertainty makes life intolerable,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_4_Factor2,It’s unfair not having any guarantees in life,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_5_Factor2,My mind can’t be relaxed if I don’t know what will happen tomorrow,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_6_Factor2,"Uncertainty makes me uneasy, anxious, or stressed",Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_7_Factor2,Unforeseen events upset me greatly,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_8_Factor2,It frustrates me not having all the information I need,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_9_Factor1,Uncertainty keeps me from living a full life,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_10_Factor2,One should always look ahead so as to avoid surprises,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_11_Factor2,"A small unforeseen event can spoil everything, even with the best of planning",Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_12_Factor1,"When it’s time to act, uncertainty paralyses me",Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_13_Factor1,Being uncertain means that I am not first rate,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_14_Factor1,"When I am uncertain, I can’t go forward",Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_15_Factor1,When I am uncertain I can’t function very well,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_16_Factor1,"Unlike me, others always seem to know where they are going with their lives",Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_17_Factor1,"Uncertainty makes me vulnerable, unhappy, or sad",Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_18_Factor2,I always want to know what the future has in store for me,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_19_Factor2,I can’t stand being taken by surprise,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_20_Factor1,The smallest doubt can stop me from acting,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_21_Factor2,I should be able to organize everything in advance,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_22_Factor1,Being uncertain means that I lack confidence,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_23_Factor1,I think it’s unfair that other people seem sure about their future,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_24_Factor1,Uncertainty keeps me from sleeping soundly,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_25_Factor1,I must get away from all uncertain situations,Factor 1: Uncertainty has negative behavioral and self-referent implications,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_26_Factor2,The ambiguities in life stress me,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+IUS_27_Factor2,I can’t stand being undecided about my future,Factor 2: Uncertainty is unfair and spoils everything,,Not at all characteristic of me 1; 2; Somewhat characteristic of me 3; 4; Entirely characteristic of me 5
+NEO_1_extraversion,Am the life of the party.,extraversion,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_2_agreeableness__r,Feel little concern for others.,agreeableness,_r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_3_conscientiousness,Am always prepared.,conscientiousness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_4_emotionalStability_r,Get stressed out easily.,emotionalStability,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_5_intellectImagination,Have a rich vocabulary.,intellectImagination,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_6_extraversion_r,Don't talk a lot.,extraversion,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_7_agreeableness,Am interested in people.,agreeableness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_8_conscientiousness_r,Leave my belongings around.,conscientiousness,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_9_emotionalStability,Am relaxed most of the time.,emotionalStability,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_10_intellectImagination_r,Have difficulty understanding abstract ideas.,intellectImagination,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_11_extraversion,Feel comfortable around people.,extraversion,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_12_agreeableness_r,Insult people.,agreeableness,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_13_conscientiousness,Pay attention to details.,conscientiousness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_14_emotionalStability_r,Worry about things.,emotionalStability,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_15_intellectImagination,Have a vivid imagination.,intellectImagination,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_16_extraversion_r,Keep in the background.,extraversion,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_17_agreeableness,Sympathize with others' feelings.,agreeableness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_18_conscientiousness_r,Make a mess of things.,conscientiousness,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_19_emotionalStability,Seldom feel blue.,emotionalStability,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_20_intellectImagination_r,Am not interested in abstract ideas.,intellectImagination,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_21_extraversion,Start conversations.,extraversion,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_22_agreeableness_r,Am not interested in other people's problems.,agreeableness,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_23_conscientiousness,Get chores done right away.,conscientiousness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_24_emotionalStability_r,Am easily disturbed.,emotionalStability,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_25_intellectImagination,Have excellent ideas.,intellectImagination,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_26_extraversion_r,Have little to say.,extraversion,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_27_agreeableness,Have a soft heart.,agreeableness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_28_conscientiousness_r,Often forget to put things back in their proper place.,conscientiousness,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_29_emotionalStability_r,Get upset easily.,emotionalStability,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_30_intellectImagination_r,Do not have a good imagination.,intellectImagination,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_31_extraversion,Talk to a lot of different people at parties.,extraversion,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_32_agreeableness_r,Am not really interested in others.,agreeableness,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_33_conscientiousness,Like order.,conscientiousness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_34_emotionalStability_r,Change my mood a lot.,emotionalStability,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_35_intellectImagination,Am quick to understand things.,intellectImagination,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_36_extraversion_r,Don't like to draw attention to myself.,extraversion,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_37_agreeableness,Take time out for others.,agreeableness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_38_conscientiousness_r,Shirk my duties.,conscientiousness,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_39_emotionalStability_r,Have frequent mood swings.,emotionalStability,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_40_intellectImagination,Use difficult words.,intellectImagination,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_41_extraversion,Don't mind being the center of attention.,extraversion,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_42_agreeableness,Feel others' emotions.,agreeableness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_43_conscientiousness,Follow a schedule.,conscientiousness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_44_emotionalStability_r,Get irritated easily.,emotionalStability,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_45_intellectImagination,Spend time reflecting on things.,intellectImagination,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_46_extraversion_r,Am quiet around strangers.,extraversion,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_47_agreeableness,Make people feel at ease.,agreeableness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_48_conscientiousness,Am exacting in my work.,conscientiousness,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_49_emotionalStability_r,Often feel blue.,emotionalStability,r,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+NEO_50_intellectImagination,Am full of ideas.,intellectImagination,,VeryInaccurate; ModeratelyInaccurate; NeitherAccurateNorInaccurate; ModeratelyAccurate; VeryAccurate
+PANAS_1_positive,Interested,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_2_negative,Distressed,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_3_positive,Excited,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_4_negative,Upset,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_5_positive,Strong,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_6_negative,Guilty,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_7_negative,Scared,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_8_negative,Hostile,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_9_positive,Enthusiastic,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_10_positive,Proud,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_11_negative,Irritable,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_12_positive,Alert,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_13_negative,Ashamed,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_14_positive,Inspired,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_15_negative,Nervous,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_16_positive,Determined,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_17_positive,Attentive,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_18_negative,Jittery,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_19_positive,Active,positive,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PANAS_20_negative,Afraid,negative,,"very slightly or not at all; a liitle, moderately, quite a bit; extremely"
+PSS_1,"In the last month, how often have you been upset because of something that happened unexpectedly?",,,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSS_2,"In the last month, how often have you felt that you were unable to control the important things in your life?",,,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSS_3,"In the last month, how often have you felt nervous and “stressed”?",,,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSS_4_r,"In the last month, how often have you felt confident about your ability to handle your personal problems?",,r,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSS_5_r,"In the last month, how often have you felt that things were going your way?",,r,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSS_6,"In the last month, how often have you found that you could not cope with all the things that you had to do?",,,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSS_7_r,"In the last month, how often have you been able to control irritations in your life?",,r,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSS_8_r,"In the last month, how often have you felt that you were on top of things?",,r,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSS_9,"In the last month, how often have you been angered because of things that were outside of your control?",,,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSS_10,"In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?",,,"Never; Almost Never; Sometimes; Fairly Often; Very Often
+"
+PSWQ_1_r,"If I do not have enough time to do everything, I do not worry about it",,r,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_2,My worries overwhelm me,,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_3_r,I do not tend to worry about things,,r,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_4,Many situations make me worry,,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_5,"I know I should not worry about things, but I just cannot help it",,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_6,When I am under pressure I worry a lot,,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_7,I am always worrying about something,,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_8_r,I find it easy to dismiss worrisome thoughts,,r,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_9,"As soon as I finish one task, I start to worry about everything else I have to do",,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_10_r,I never worry about anything,,r,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_11_r,"When there is nothing more I can do about a concern, I do not worry about it any more",,r,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_12,I have been a worrier all my life,,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_13,I notice that I have been worrying about things,,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_14,"Once I start worrying, I cannot stop",,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_15,I worry all the time,,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+PSWQ_16,I worry about projects until they are all done,,,Not at all typical of me1; 2; 3; 4; Very typical of me5
+STAIS_1_r,I feel calm,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIS_2_r,I feel secure,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIS_3,I am tense,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_4,I feel stained,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_5_r,I feel at ease,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIS_6,I feel upset,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_7,I am presently worrying over possible misfortunes,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_8_r,I feel satisfied,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIS_9,I feel frightened,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_10_r,I feel comfortable,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIS_11_r,I feel self-confident,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIS_12,I feel nervous,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_13,I am jittery,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_14,I feel indecisive,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_15_r,I am relaxed,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIS_16_r,I feel content,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIS_17,I am worried,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_18,I feel confused,,,Not at all; Somewhat; Moderately so; Very much so
+STAIS_19_r,I feel steady,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIS_20_r,I feel pleasant,,r,Not at all; Somewhat; Moderately so; Very much so
+STAIT_1_r,I feel pleasant,,r,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_2,I feel nervous and restless,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_3_r,I feel satisfied with myself,,r,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_4,I wish I could be as happy as others seem to be,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_5,I feel like a failure,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_6_r,I feel rested,,r,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_7_r,"I am""calm, cool, and collected""",,r,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_8,I feel that difficulties are piling up so that I cannot overcome them,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_9,I worry too much over something that really doesn't matter,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_10_r,I am happy,,r,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_11,I have disturbing thoughts,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_12,I lack self-confidence,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_13_r,I feel secure,,r,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_14_r,I make decisions easily,,r,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_15,I feel inadequate,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_16_r,I am content,,r,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_17,Some unimportant thought runs through my mind and bothers me,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_18,I take disappointments so keenly that I can't put them out of my mind,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_19_r,I am a steady person,,r,Almost never 1; Sometimes 2; Often 3; Almost always 4
+STAIT_20,I get in a state of tension or turmoil as I think over my recent concerns and interests,,,Almost never 1; Sometimes 2; Often 3; Almost always 4
+ERQunmodified_1_reapp,"When I want to feel more positive emotion (such as joy or amusement), I change what I'm thinking about",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQunmodified_2_supp,I keep my emotions to myself,,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQunmodified_3_reapp,"When I want to feel less negative emotion (such as sadness or anger), I change what I'm thinking about",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQunmodified_4_supp,"When I am feeling positive emotions, I am careful not to express them",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQunmodified_5_reapp,"When I'm faced with a stressful situation, I make myself think about it in a way that helps me stay calm",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQunmodified_6_supp,I control my emotions by not expressing them,,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQunmodified_7_reapp,"When I want to feel more positive emotion, I change the way I'm thinking about the situation",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQunmodified_8_reapp,I control my emotions by changing the way I think about the situation I'm in,,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQunmodified_9_supp,"When I am feeling negative emotions, I make sure not to express them",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQunmodified_10_reapp,"When I want to feel less negative emotion, I change the way I'm thinking about the situation",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_1_reapp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - When I want to feel more positive emotion (such as joy or amusement), I change what I'm thinking about",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_2_supp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - I keep my emotions to myself",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_3_reapp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - When I want to feel less negative emotion (such as sadness or anger), I change what I'm thinking about",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_4_supp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - When I am feeling positive emotions, I am careful not to express them",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_5_reapp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - When I'm faced with a stressful situation, I make myself think about it in a way that helps me stay calm",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_6_supp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - I control my emotions by not expressing them",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_7_reapp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - When I want to feel more positive emotion, I change the way I'm thinking about the situation",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_8_reapp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - I control my emotions by changing the way I think about the situation I'm in",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_9_supp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - When I am feeling negative emotions, I make sure not to express them",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7
+ERQmodified_10_reapp,"For each item, please answer using the scale below, regarding how you have recently been managing your emotions: - When I want to feel less negative emotion, I change the way I'm thinking about the situation",,,Strongly Disagree 1; 2; 3; Neutral 4; 5; 6; Strongly Agree 7

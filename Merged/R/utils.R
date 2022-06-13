@@ -86,3 +86,11 @@ plot_model_IVs_stan <- function(your_model, variable_array, x_range=seq(-2.5, 2.
 }
 # var ---------------------------------------------------------------------
 # todo: emomem_theme 
+emomem_theme <- theme_pubr(legend = "bottom")+
+  theme(text = element_text(size=18),
+        axis.text=element_text(size=18),
+        legend.text = element_text(size = 15),
+        axis.line = element_line(size = 0.7),
+        legend.margin = margin(0, -10, 0, 0),
+        legend.box.margin=margin(-15,-10,0,-10),
+        legend.key.size = unit(2,"line"))

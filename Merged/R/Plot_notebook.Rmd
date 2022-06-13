@@ -1,0 +1,229 @@
+---
+title: "Plot and Descriptive Stats for Covid Project"
+output: 
+  rmarkdown::github_document:
+    toc: true
+    #toc_float: true
+    toc_depth: 4
+---
+
+This is an R Markdown file for the plots in the covid project manuscript as well as the descriptive stats part.
+
+Make sure you have the MCMC output (huge .RData file) included in the current directory before you run this .Rmd file.
+
+```{r load dependency and datafile, include=FALSE}
+source('utils.R')
+# read in data
+load(file = "./911nCovid_StressMemory_new.rda") # this is not included in github repo
+covid_wide <-  read.csv('../data/Complete_test_Dev_Exp_Only_Data_Manipulation.csv') #each row is one observation, T1 and T2 separated by prefix in the colnmae
+nine11_wide_avg <- read.csv('../data/df.emo.wide.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
+nine11_wide <- read.csv('../data/df.emo.wide_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is specific to one emotion
+nine11_long_avg <- read.csv('../data/df.emo.long.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
+
+#  filter time2 data frome 911 to do shared analysis 
+nine11_long_avg_T2 <- nine11_long_avg %>% filter(time==2)
+nine11_wide_T2 <- nine11_wide %>% dplyr::select(!ends_with('3') & !ends_with('4'))
+
+## define var related to MCMC
+niters <- 20000
+seed_no <- 1636
+```
+
+# Descriptive Stats for the dataset
+
+```{r delta time}
+# delta time
+covid_wide$Dat_Delta <- as.Date(covid_wide$T2_StartDate) - as.Date(covid_wide$T2_Dat)
+mean(covid_wide$Dat_Delta)
+sqrt(var(covid_wide$Dat_Delta))
+
+covid_wide$T1_Demographics_gender %>% table(useNA = 'ifany')
+
+covid_wide %>% ggplot(aes(x=as.double(Dat_Delta))) +
+   geom_histogram(color='black') +
+   xlab('T2-T1 (days)') +
+  emomem_theme
+
+ggsave('../Output/fig/pdf/Supp_delta_date.pdf', height=6, width=8)
+ggsave('../Output/fig/png/Supp_delta_date.png', height=6, width=8)
+```
+
+# Supplementary Table for Covid related stressors
+```{r}
+T1_covid_header <- read.csv('../data-raw/COVIDdata_vertical_new_q.csv')
+T1_covid_item <- T1_covid_header %>% filter(str_detect(Header, 'lifechanges'))
+T1_covid_item %>% mutate(Item = str_replace(Item, 'How much stress are you experiencing right now as a result of...', '')) %>% select(Item) %>% rename(`How much stress are you experiencing right now as a result of...`=Item) %>% 
+  as.data.frame %>% write.csv('../Output/csv/Supp_T1_covid_item.csv')
+```
+
+# Percentage of overestimation
+
+```{r}
+covid_percent <- covid_wide %>% mutate(Percent = Covid_Dev / twovar_Covid_Exp1) %>% filter(!is.na(Percent)) 
+nine11_percent_T2 <- nine11_long_avg_T2 %>% mutate(Percent = memdev / twovar_prev_experience) %>% filter(!is.na(Percent))
+combined_percent <- covid_percent %>% dplyr::select(Subject, Percent, Covid_Dev, twovar_Covid_Exp1, num_weights_2var) %>% 
+  rename(dev = Covid_Dev, twovar_prev = twovar_Covid_Exp1, num_weights = num_weights_2var) %>% 
+  mutate(Dataset = 'Covid') %>% 
+  rbind(
+    nine11_percent_T2 %>% dplyr::select(Subject, Percent, memdev, twovar_prev_experience, num_weights_updated) %>% 
+      rename(dev = memdev, twovar_prev = twovar_prev_experience, num_weights = num_weights_updated) %>% 
+      mutate(Dataset = '911')
+  ) %>% 
+  mutate(Dataset = relevel(factor(Dataset), ref = 'Covid')) %>% 
+  group_by(Dataset) %>% 
+  mutate(Bdev = beta_squeeze((dev+4)/8))
+
+combined_percent %>% group_by(Dataset) %>% summarise(mean=mean(Percent), sd=sqrt(var(Percent)))
+
+```
+
+
+# Loading Matrix for PCA
+```{r PCA Loading Matrix}
+
+df.prev_pca <- covid_wide %>% select(T2_prolific_mturk_ID, starts_with('T1_PSS') & !contains('total'), starts_with('T1_DASS') & !contains('total')) %>% na.omit 
+prev_pca <- df.prev_pca %>% select(-T2_prolific_mturk_ID) %>% 
+  prcomp(center=TRUE, scale. =TRUE)
+
+df.curr_pca <- covid_wide %>% select(T2_prolific_mturk_ID, 
+                                   starts_with('T2_PSS') & !contains('total'), 
+                                   starts_with('T2_DASS') & !contains('total')) %>% 
+  na.omit %>% 
+  mutate(T2_PSS_4=4-T2_PSS_4, T2_PSS_5=4-T2_PSS_5, T2_PSS_7=4-T2_PSS_7, T2_PSS_8=4-T2_PSS_8) %>% 
+  set_colnames(colnames(df.prev_pca))
+
+df.prev_pca$prev_pca_score <- (prev_pca$x[,1]) * (-1)
+df.curr_pca$curr_pca_score <- ((prev_pca %>% predict(df.curr_pca %>% select(-T2_prolific_mturk_ID)))[,1]) * (-1)
+
+# loading matrix
+loading.prev_pca <- data.frame(Loading = prev_pca$rotation[,1]) %>% rownames_to_column(var='T1_Scale_Item') %>% 
+  mutate(Scale = str_extract(T1_Scale_Item, 'PSS|DASS'), Index = str_extract(T1_Scale_Item, '(?<=_)[0-9]+'))
+loading_header.prev_pca <- T1_covid_header %>% filter(str_detect(Header,'PSS_') | str_detect(Header, 'DASS21_')) %>% 
+  mutate(Scale = str_extract(Header, 'PSS|DASS'), Index = str_extract(Header, '(?<=_)[0-9]+')) 
+loading.prev_pca %>% merge(loading_header.prev_pca, by = c('Scale','Index')) %>% select(Scale, Item, Loading) %>% 
+  mutate(Loading = round(Loading, 3)) %>% 
+  write.csv('../Output/csv/Supp_PCA_loading.csv')
+
+```
+
+# Figure 1
+```{r Figure 1}
+
+# Fig 1A
+covid_long_type <- covid_wide %>% mutate(BCovid_Exp1 = beta_squeeze((Covid_Exp1-1)/4),
+                                         BCovid_Exp2 = beta_squeeze((Covid_Exp2-1)/4),
+                                         BCovid_Rem = beta_squeeze(Covid_Rem-1)/4) %>% 
+  pivot_longer(cols = c('BCovid_Exp1','BCovid_Exp2','BCovid_Rem'),
+               names_to = 'MemType', values_to = 'BStress') %>% 
+  mutate(MemType = relevel(factor(MemType), ref='BCovid_Exp1')) %>% 
+  filter(!is.na(BStress))
+
+covid_long_type_plot <- covid_wide %>% mutate(BCovid_Exp1 = beta_squeeze((Covid_Exp1-1)/4),
+                                         BCovid_Exp2 = beta_squeeze((Covid_Exp2-1)/4),
+                                         BCovid_Rem = beta_squeeze(Covid_Rem-1)/4) %>% 
+  pivot_longer(cols = c('Covid_Exp1','Covid_Exp2','Covid_Rem'),
+               names_to = 'MemType', values_to = 'Stress') %>% 
+  mutate(MemType = factor(MemType, levels = c('Covid_Exp1','Covid_Exp2','Covid_Rem'),
+                          labels = c('Previous ', 'Current ', 'Remembered'))) %>% 
+  filter(!is.na(Stress)) 
+  
+
+fig1A <- covid_long_type_plot %>% ggplot(aes(x = MemType, y = Stress)) + 
+  stat_summary() 
+
+fig1A + emomem_theme + 
+  ylab('Average Stress Rating (1-5)') +
+  xlab('') 
+ggsave('../Output/fig/pdf/fig_stress_compare.pdf',height=6,width=8)
+ggsave('../Output/fig/png/fig_stress_compare.png',height=6,width=8)
+  
+# Fig 1B
+nine11_long_type <- nine11_long_avg_T2 %>% 
+  mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
+         B911_Exp2 = beta_squeeze((curr_experience-1)/4),
+         B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
+  pivot_longer(cols = c('B911_Exp1', 'B911_Exp2','B911_Rem'),
+               names_to = 'MemType', values_to = 'BNegEmo') %>% 
+  mutate(MemType = relevel(factor(MemType), ref='B911_Exp1')) %>% 
+  filter(!is.na(BNegEmo))
+
+nine11_long_type_plot <- nine11_long_avg_T2 %>% 
+  mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
+         B911_Exp2 = beta_squeeze((curr_experience-1)/4),
+         B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
+  pivot_longer(cols = c('prev_experience', 'curr_experience','stress_memory'),
+               names_to = 'MemType', values_to = 'NegEmo') %>% 
+  mutate(MemType = factor(MemType, levels = c('prev_experience','curr_experience','stress_memory'),
+                          labels = c('Previous ', 'Current ', 'Remembered'))) %>% 
+  filter(!is.na(NegEmo))
+
+fig1B <- nine11_long_type_plot %>% ggplot(aes(x = MemType, y = NegEmo)) + 
+  stat_summary()
+fig1B + emomem_theme + 
+  ylab('Average negative emotion intensity (1-5)') +
+  xlab('') 
+ggsave('../Output/fig/pdf/fig_negemo_compare.pdf',height=6,width=8)
+ggsave('../Output/fig/png/fig_negemo_compare.png',height=6,width=8)
+  
+
+# Fig 1C
+```
+
+
+
+
+
+```
+
+```{r}
+covid_long_type <- covid_wide %>% mutate(BCovid_Exp1 = beta_squeeze((Covid_Exp1-1)/4),
+                                         BCovid_Exp2 = beta_squeeze((Covid_Exp2-1)/4),
+                                         BCovid_Rem = beta_squeeze(Covid_Rem-1)/4) %>% 
+  pivot_longer(cols = c('BCovid_Exp1','BCovid_Exp2','BCovid_Rem'),
+               names_to = 'MemType', values_to = 'BStress') %>% 
+  mutate(MemType = relevel(factor(MemType), ref='BCovid_Exp1')) %>% 
+  filter(!is.na(BStress))
+n_ppt <- length(unique(covid_long_type$Subject)) #Calculate number of participants; 726
+covid_long_type %>% group_by(MemType) %>% 
+  summarise(mean=mean(BStress, na.rm=T), se=sd(BStress, na.rm=T)/sqrt(n_ppt))
+
+#  sanity check: BStress has been beta_squeezed and looks like a beta distribution (that is, fall between 0 and 1)
+covid_long_type %>% ggplot(aes(x=BStress)) + geom_histogram(bins = 20) + facet_wrap(~MemType)
+if (!exists("MemType_covid_MCMC")) {
+MemType_covid_MCMC <- stan_glmer(BStress ~ MemType + (1|Subject), 
+                              family = mgcv::betar, iter= niters, seed=seed_no, data = covid_long_type)
+}
+#Posterior Predictive Check (Ppc)
+y_MemType_covid_MCMC<- covid_long_type$BStress
+yrep_y_MemType_covid_MCMC <- posterior_predict(MemType_covid_MCMC, draws = 500)
+ppc_dens_overlay(y_MemType_covid_MCMC, yrep_y_MemType_covid_MCMC[1:50, ]) #Looks pretty good!
+#Summarize Posterior
+plot_model(MemType_covid_MCMC, type = "pred", ci.lvl = .95, bpe.color = "red")
+describe_posterior(MemType_covid_MCMC)
+
+nine11_long_type <- nine11_long_avg_T2 %>% 
+  mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
+         B911_Exp2 = beta_squeeze((curr_experience-1)/4),
+         B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
+  pivot_longer(cols = c('B911_Exp1', 'B911_Exp2','B911_Rem'),
+               names_to = 'MemType', values_to = 'BNegEmo') %>% 
+  mutate(MemType = relevel(factor(MemType), ref='B911_Exp1')) %>% 
+  filter(!is.na(BNegEmo))
+ #Number of 911 participants in case we also need it for SE
+n_911_ppt <- length(unique(nine11_long_type$Subject)) #Calculate number of participants; 1430
+
+#   sanity check: BNegEmo has been beta_squeezed
+nine11_long_type %>% ggplot(aes(x=BNegEmo)) + geom_histogram(bins = 20) + facet_wrap(~MemType) # may worth noting that sanity check result for covid and 911 looks different
+if (!exists("MemType_911_MCMC_T2")) {
+MemType_911_MCMC_T2 <- stan_glmer(BNegEmo ~ MemType + (1|Subject), 
+                                family = mgcv::betar, iter= niters, seed=seed_no,
+                                data = nine11_long_type)
+}
+#Posterior Predictive Check (Ppc)
+y_MemType_911_MCMC_T2<- nine11_long_type$BNegEmo
+yrep_MemType_911_MCMC_T2 <- posterior_predict(MemType_911_MCMC_T2, draws = 500)
+ppc_dens_overlay(y_MemType_911_MCMC_T2, yrep_MemType_911_MCMC_T2[1:50, ]) #Looks decent, less peaked than data
+#Summarize Posterior
+plot_model(MemType_911_MCMC_T2, type = "pred", ci.lvl = .95, bpe.color = "red")
+describe_posterior(MemType_911_MCMC_T2)
+

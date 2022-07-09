@@ -29,6 +29,36 @@ niters <- 20000
 seed_no <- 1636
 ```
 
+# Sample size
+```{r sample size}
+# 911
+# goal: count how many ppl have survey 1 & 2; survey 1 & 3; survey 1 
+nine11_long_avg %>% glimpse
+
+nine11_wide_avg_flag <- nine11_wide_avg %>% mutate(flag2 = !is.na(mean_experienced2), flag3 = !is.na(mean_experienced3), flag4 = !is.na(mean_experienced4))
+
+nine11_wide_avg_flag %>% dim
+nine11_wide_avg_flag %>% filter(flag2 & flag3 & (!flag4))  %>% dim
+nine11_wide_avg_flag %>% filter(flag2 & flag3 & flag4) %>% dim
+nine11_wide_avg_flag %>% filter(flag2 & (!flag3) & flag4) %>% dim
+nine11_wide_avg_flag %>% filter(flag2 & (!flag3) & (!flag4)) %>% dim
+nine11_wide_avg_flag %>% filter((!flag2) & flag3 & (!flag4)) %>% dim
+nine11_wide_avg_flag %>% filter((!flag2) & flag3 & flag4) %>% dim
+nine11_wide_avg_flag %>% filter((!flag2) & (!flag3) & flag4) %>% dim
+nine11_wide_avg_flag %>% filter((!flag2) & (!flag3) & (!flag4)) %>% dim
+
+nine11_wide_avg_flag %>% filter((!flag2) & (!flag3) & (!flag4)) %>% dim
+nine11_wide_avg_flag %>% filter((!flag2) & (!flag3) & (!flag4)) %>% view
+
+nine11_wide_avg %>% glimpse
+nine11_long_avg %>% filter(time)
+nine11_wide %>% dim
+nine11_wide %>% filter9
+nine11_wide %>% glimpse
+nine11_wide$Subject %>% unique %>% length
+```
+
+
 # Descriptive Stats for the dataset
 
 ```{r delta time}
@@ -154,7 +184,7 @@ covid_long_type_plot <- covid_wide %>% mutate(BCovid_Exp1 = beta_squeeze((Covid_
   
 
 fig1A <- covid_long_type_plot %>% ggplot(aes(x = MemType, y = Stress)) + 
-  stat_summary() 
+  stat_summary(size=1.7) 
 
 fig1A + emomem_theme + 
   ylab('Average Stress') +
@@ -183,7 +213,7 @@ nine11_long_type_plot <- nine11_long_avg_T2 %>%
   filter(!is.na(NegEmo))
 
 fig1B <- nine11_long_type_plot %>% ggplot(aes(x = MemType, y = NegEmo)) + 
-  stat_summary()
+  stat_summary(size=1.2)
 fig1B + emomem_theme + 
   ylab('Average Negative Emotion Intensity') +
   xlab('') 
@@ -339,7 +369,7 @@ ggsave('../Output/fig/png/delta_wellbeing.png',height=6,width=6)
 # Fig 3
 p_911_avg <- nine11_percent %>% 
   mutate(time = factor(time, levels = c(2:4),
-                       labels = c('1 year','5 years','10 years'))) %>% 
+                       labels = c('1 year','3 years','10 years'))) %>% 
   ggplot(aes(x=time, y=memdev)) + 
     stat_summary() + 
     stat_summary(geom='line', aes(group=1))
@@ -349,7 +379,7 @@ p_911_avg + ylab('Memory Deviation') +
   xlab('Time Interval') +
   emomem_theme
 
-ggsave('../Output/fig/pdf/avg_911_time',height=6,width=6)
+ggsave('../Output/fig/pdf/avg_911_time.pdf',height=6,width=6)
 ggsave('../Output/fig/png/avg_911_time.png',height=6,width=6)
 
 ```
@@ -364,12 +394,6 @@ df_Rem_911_prev <- df_Rem_911_prev %>% mutate(across(predicted:conf.high,
                              function(x){return(reverse_beta_squeeze(x, length(nine11_BRem$stress_memory), likert_min_max = c(1,5)))},
                              .names = "{.col}_original"))
 
-df_delta_EmoWell <- df_delta_EmoWell %>% mutate(
-  across(!starts_with("x"),
-         function(x){return(reverse_beta_squeeze(x, n=length(covid_percent %>% filter(!is.na(Covid_Exp1))),
-                                                 likert_min_max = c(-4,4)))},
-         .names = "{.col}_original"))
-
 p_Rem_911_prev <- df_Rem_911_prev %>% ggplot(aes(x=x, y=predicted_original, group=group, color=group)) +
   geom_line()+
   geom_ribbon(aes(ymin=conf.low_original, ymax=conf.high_original,
@@ -379,7 +403,7 @@ p_Rem_911_prev +
   ylab('Remembered Negative Emotions') + 
   xlab('Previous Negative Emotions') + 
   ylim(1,5)+
-  scale_color_manual(labels = c('1 year','5 years', '10 years'), values = palette3var)+
+  scale_color_manual(labels = c('1 year','3 years', '10 years'), values = palette3var)+
   scale_fill_manual(values = palette3var)+
   labs(colour='') + 
   emomem_theme +
@@ -415,7 +439,7 @@ p_Rem_911_curr +
   ylab('Remembered Negative Emotions') + 
   xlab('Current Negative Emotions') + 
   ylim(1,5)+
-  scale_color_manual(labels = c('1 year','5 years', '10 years'), values = palette3var)+
+  scale_color_manual(labels = c('1 year','3 years', '10 years'), values = palette3var)+
   scale_fill_manual(values = palette3var)+
   labs(colour='') + 
   emomem_theme +
@@ -428,7 +452,7 @@ p_Rem_911_curr +
   ylab('Remembered Negative Emotions') + 
   xlab('Current Negative Emotions') + 
   ylim(1,5)+
-  scale_color_manual(labels = c('1 year','5 years', '10 years'), values = palette3var)+
+  scale_color_manual(labels = c('1 year','3 years', '10 years'), values = palette3var)+
   scale_fill_manual(values = palette3var)+
   labs(colour='') + 
   emomem_theme 

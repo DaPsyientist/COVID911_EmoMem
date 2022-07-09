@@ -5,7 +5,8 @@
 
 if(!require("pacman")) install.packages("pacman") #Install pacman to facilitate package installing/loading
 p_load(tidyverse, ggplot2,  dplyr, BayesFactor, brms, lme4, sjPlot, rstanarm, bayestestR,
-       sjPlot, car, multcomp, tidyr, betareg, glmmTMB, foreign,magrittr, bayesplot, emmeans) #Load necessary rPackages
+       sjPlot, car, multcomp, tidyr, betareg, glmmTMB, foreign,magrittr, bayesplot, emmeans,
+       ggpubr) #Load necessary rPackages
 devtools::install_github("traversc/trqwe")
 options(mc.cores = parallel::detectCores())
 beta_squeeze <- function(y) {
@@ -15,7 +16,7 @@ beta_squeeze <- function(y) {
 }
 reverse_beta_squeeze <- function(y2, n, likert_min_max=NULL) {
   y <- (n * y2 -  0.5) / (n - 1)
-  if (!is.null(likert_min_max_nstep)){
+  if (!is.null(likert_min_max)){
     y <- (y * (likert_min_max[2]-likert_min_max[1])) + likert_min_max[1]
   }
   return(y)

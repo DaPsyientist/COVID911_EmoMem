@@ -6,7 +6,10 @@ setwd(path)
 source('utils.R')
 #### Data Preparation ####
 # Load data ---------------------------------------------------------------
-df.911 <- read.spss('../../Haoxue/data-raw/911data.sav') %>% as.data.frame()
+# note to myself: if use as.data.frame on it, no variable labels will be accessible
+df.911 <- read.spss('../../Haoxue/data-raw/911data.sav') %>% as.data.frame() 
+df.9114label <- read.spss('../../Haoxue/data-raw/911data.sav') 
+label.911 <- attr(df.9114label, "variable.labels")
 #df.911_test <- haven::read_sav('../../Haoxue/data-raw/911data.sav')
 # Grab related columns ----------------------------------------------------
 df.emo <- df.911 %>% dplyr::select(s64q13f, s65q14f, s66q15f, s67q16f, s68q17f, s69q18f,
@@ -25,7 +28,8 @@ df.emo <- df.911 %>% dplyr::select(s64q13f, s65q14f, s66q15f, s67q16f, s68q17f, 
                  'sadness_s2_remembered', 'anger_s2_remembered', 'fear_s2_remembered','confusion_s2_remembered','frustration_s2_remembered','shock_s2_remembered',
                  'sadness_s3_remembered', 'anger_s3_remembered', 'fear_s3_remembered','confusion_s3_remembered','frustration_s3_remembered','shock_s3_remembered',
                  'sadness_s4_remembered', 'anger_s4_remembered', 'fear_s4_remembered','confusion_s4_remembered','frustration_s4_remembered','shock_s4_remembered',
-                 'Subject'))
+                 'Subject')) 
+  
 
 emo_miss <- function(x){
   y <- ifelse(x==6|x==0, NA, x)
@@ -34,7 +38,14 @@ emo_miss <- function(x){
 df.emo <- df.emo %>% mutate(across(where(is.double),
                                    .fns = emo_miss))
 
-
+# separate df for demo (can add more stuff in the future)
+df.emo.demo <- df.911 %>% dplyr::select(r2mrc6, s4qdmf, s5qdmf) %>% 
+  set_colnames(c('Subject', 'age', 'gender')) %>% 
+  mutate(gender = factor(gender, levels = c(0,1,2), labels = c('Not stated', 'Female', 'Male'))) %>% 
+  mutate(Subject = str_trim(Subject)) %>% 
+  filter(Subject != "" & Subject != "N/A" & !is.na(Subject)) 
+df.emo.demo %>% write.csv('../data/df.emo.demographics.csv')
+  
 # wide2long ---------------------------------------------------------------
 df.emo.long <- df.emo %>% 
   mutate(Subject = str_trim(Subject)) %>% 
@@ -87,7 +98,7 @@ twovar.df.emo.wide.t4 <- df.emo.wide %>% filter(!is.na(memdev4)) %>% group_by(Su
   )
 
 
-df.emo.wide.avg <- df.emo.wide %>% group_by(Subject) %>% 
+df.emo.wide.avg <- df.emo.wide %>% group_by(Subject, gender) %>% 
   summarise(mean_experienced1 = mean(experienced1, na.rm = TRUE),
          mean_experienced2 = mean(experienced2, na.rm = TRUE),
          mean_experienced3 = mean(experienced3, na.rm = TRUE),

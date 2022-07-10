@@ -259,6 +259,8 @@ nine11_percent <- nine11_long_avg %>%
 #nine11_percent %>% group_by(time) %>% 
 #  summarise(mean=mean(Percent), sd=sd(Percent))
 
+# note: the original data stored in the .rda is wrong. it was operated on percent, while we are actually interested in the raw deviation
+
 if (!exists("Time_avg_911_MCMC_weighted")) {
 Time_avg_911_MCMC_weighted <- stan_glmer(Bdev ~ time + prev_experience + (1|Subject), 
                              family = mgcv::betar, iter= niters, 
@@ -272,6 +274,9 @@ ppc_dens_overlay(y_Time_avg_911_MCMC_weighted, yrep_Time_avg_911_MCMC_weighted[1
 #Summarize Posterior
 plot_model(Time_avg_911_MCMC_weighted, type = "pred", ci.lvl = .95, bpe.color = "red") 
 describe_posterior(Time_avg_911_MCMC_weighted)
+
+Time_avg_911_MCMC_unweighted_percent <- Time_avg_911_MCMC_unweighted
+# remember to save it afterwards! 
 if (!exists("Time_avg_911_MCMC_unweighted")) {
 Time_avg_911_MCMC_unweighted <- stan_glmer(Bdev ~ time + prev_experience + (1|Subject), 
                              family = mgcv::betar, iter= niters, 

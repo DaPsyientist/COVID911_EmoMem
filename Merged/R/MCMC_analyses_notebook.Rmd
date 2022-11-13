@@ -7,13 +7,21 @@ output:
     toc_depth: 4
 ---
 
-This is an R markdown file to demonstrate the Bayesian Regression Results for Covid Project (led by Haoxue & Johnny)
+This is an R markdown file to run the Regression Analysis for manuscript 'Overestimating the intensity of negative emotion in autobiographical memory: evidence from the 9/11 attack and Covid-19 pandemic'
+
+For plotting, please see the Plot_notebook.Rmd
+
+Besides providing the data files needed to run the analysis, we have also provided a saved rds file storing all the MCMC objects. You could download it from OSF [OSF link] and place it in the data folder
+
+For any question, contact Haoxue (haoxue_fan@g.harvard.edu) or Johnny (jcastillo@g.harvard.edu)
 
 ```{r load dependency and datafile, include=FALSE}
+# source some helper functions
 source('utils.R')
 # read in data
-load(file = "./911nCovid_StressMemory_new.rda")
-covid_wide <-  read.csv('../data/Complete_test_Dev_Exp_Only_Data_Manipulation.csv') #each row is one observation, T1 and T2 separated by prefix in the colnmae
+# if you wish to load in the saved RData file, uncomment the line below
+#load(file = '../data/BayesRegObj.RData')
+covid_wide <-  read.csv('../data/Complete_test_Dev_Exp_Only_Data_Manipulation.csv') #each row is one observation, T1 and T2 separated by prefix in the column
 nine11_wide_avg <- read.csv('../data/df.emo.wide.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
 nine11_wide <- read.csv('../data/df.emo.wide_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is specific to one emotion
 nine11_long_avg <- read.csv('../data/df.emo.long.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
@@ -23,12 +31,37 @@ nine11_long_avg_T2 <- nine11_long_avg %>% filter(time==2)
 nine11_wide_T2 <- nine11_wide %>% dplyr::select(!ends_with('3') & !ends_with('4'))
 
 ## define var related to MCMC
-niters <- 20000
+niters <- 40000
 seed_no <- 1636
 ```
 
+# Demographic
 
-# Shared analysis 1: Stress (NegEmo) ~ type (T1_experienced/T2_remembered/T2_experienced)
+## Covid
+
+```{r demo}
+covid_wide$T1_Demographics_gender %>% table(useNA='ifany')
+covid_wide$T1_Demographics_race %>% table(useNA = 'ifany')
+covid_wide$T1_Demographics_HispanicLatino %>% table(useNA = 'ifany')
+```
+
+## 911
+
+```{r}
+df.emo.demo <- read.csv('../data/df.911.demo.csv')
+
+nine11_long_avg_T2.demo <- nine11_long_avg_T2 %>% filter(!is.na(prev_experience) & !is.na(curr_experience)) %>% left_join(df.emo.demo) 
+nine11_long_avg_T2.demo$gender %>% table(useNA = 'ifany')
+c(nine11_long_avg_T2.demo$age %>% mean(na.rm=T), nine11_long_avg_T2.demo$age %>% var(na.rm=T) %>% sqrt)
+nine11_long_avg_T2.demo$race_1 %>% table(useNA = 'ifany')
+
+nine11_long_avg.demo <- nine11_long_avg %>% filter(!is.na(memdev) & !is.na(prev_experience)) %>% left_join(df.emo.demo) %>% group_by(Subject) %>% slice(1)
+nine11_long_avg.demo$gender %>% table(useNA = 'ifany')
+c(nine11_long_avg.demo$age %>% mean(na.rm=T), nine11_long_avg.demo$age %>% var(na.rm=T) %>% sqrt)
+nine11_long_avg.demo$race_1 %>% table(useNA = 'ifany')
+```
+
+# Stress (NegEmo) ~ type (T1_experienced/T2_remembered/T2_experienced)
 
 This analysis answers the q: Does T1_experienced / T2_remembered / T2_experienced differ from each other? 
 
@@ -54,7 +87,6 @@ MemType_covid_MCMC <- stan_glmer(BStress ~ MemType + (1|Subject),
 #Posterior Predictive Check (Ppc)
 y_MemType_covid_MCMC<- covid_long_type$BStress
 yrep_y_MemType_covid_MCMC <- posterior_predict(MemType_covid_MCMC, draws = 500)
-ppc_dens_overlay(y_MemType_covid_MCMC, yrep_y_MemType_covid_MCMC[1:50, ]) #Looks pretty good!
 #Summarize Posterior
 plot_model(MemType_covid_MCMC, type = "pred", ci.lvl = .95, bpe.color = "red")
 describe_posterior(MemType_covid_MCMC)
@@ -62,6 +94,7 @@ describe_posterior(MemType_covid_MCMC)
 
 People's T2_experienced covid stress is smaller than T1_experienced, while T2_remembered is higher than T1_experienced.
 
+[Haoxue: not sure how to deal with the words below yet.]
 Note that in the plot above (and the model) the DVs have been beta transformed.
 
 If we want to see the results on its original scale, we will need to run the same analysis but this time possibly use a beta linear mixed regrsssion.
@@ -92,20 +125,21 @@ MemType_911_MCMC_T2 <- stan_glmer(BNegEmo ~ MemType + (1|Subject),
 #Posterior Predictive Check (Ppc)
 y_MemType_911_MCMC_T2<- nine11_long_type$BNegEmo
 yrep_MemType_911_MCMC_T2 <- posterior_predict(MemType_911_MCMC_T2, draws = 500)
-ppc_dens_overlay(y_MemType_911_MCMC_T2, yrep_MemType_911_MCMC_T2[1:50, ]) #Looks decent, less peaked than data
 #Summarize Posterior
 plot_model(MemType_911_MCMC_T2, type = "pred", ci.lvl = .95, bpe.color = "red")
 describe_posterior(MemType_911_MCMC_T2)
 
 ```
 
-# Shared Analysis 2: Deviance  ~ Dataset (Covid/911_T2) + T1_experienced
+# Deviance  ~ Dataset (Covid/911_T2) + T1_experienced
 
 In this analysis, we aim to compare whether people's degree of deviance differ between Covid and 9/11 data.
 
 Because the range of response differs between two dataset, we use Deviance (transformed into Beta) as DV and use the data type and T1_experienced to predict it. 
 
 A quick note that the reason that we moved away from percent is because that the contonation of a ratio is that the same magnitude of change means differently when the baseline is different. However, this is not what we mean here. Therefore, we decide to focus on the raw deviance score while controlling for baseline by including T1_experienced on the right hand side. 
+
+Another quick note for the model specification: there is no random effect because each subject either contribute to the covid or the 9/11 dataset, but not both
 
 ```{r, include = FALSE}
 # code in this chunk was related to percent, keep it here for now.
@@ -125,33 +159,13 @@ combined_percent <- covid_percent %>% dplyr::select(Subject, Percent, Covid_Dev,
 
 # sanity check: Percent looks like Gaussian
 combined_percent %>% ggplot(aes(x=Percent)) + geom_histogram(bins = 100) + facet_wrap(~Dataset)
-if (!exists("Dataset_Percent_MCMC")) {
-Dataset_Percent_MCMC <- stan_glm(Percent ~ Dataset, family = "gaussian", iter= niters, seed=seed_no,data = combined_percent) 
-}
-#Posterior Predictive Check (Ppc)
-y_Dataset_Percent_MCMC<- combined_percent$Percent
-yrep_Dataset_Percent_MCMC <- posterior_predict(Dataset_Percent_MCMC, draws = 500)
-ppc_dens_overlay(y_Dataset_Percent_MCMC, yrep_Dataset_Percent_MCMC[1:50, ]) #Looks decent, less peaked, more dispersed than data
-#Summarize Posterior
-plot_model(Dataset_Percent_MCMC, type = "pred", ci.lvl = .95, bpe.color = "red")
-describe_posterior(Dataset_Percent_MCMC)
-```
 
-```{r}
-#Dataset_Percent_baseline_MCMC <- stan_glm(Percent ~ Dataset + twovar_prev, family = "gaussian", iter= niters, data = combined_percent) 
 if (!exists("Dataset_Delta_baseline_MCMC")) {
 Dataset_Delta_baseline_MCMC <- stan_glm(Bdev ~ Dataset + twovar_prev, family = mgcv::betar, iter= niters, seed=seed_no, data = combined_percent) 
 }
-if (!exists("Dataset_Delta_baseline_MCMC_betareg")) {
-  Dataset_Delta_baseline_MCMC_betareg <- stan_betareg(Bdev ~ Dataset + twovar_prev, 
-                                                      iter= niters, seed=seed_no, data = combined_percent) 
-}
+
 #Posterior Predictive Check (Ppc)
 y_Dataset_Delta_baseline_MCMC <- combined_percent$Bdev
-#yrep_Dataset_Delta_baseline_MCMC <- rstanarm::posterior_predict(Dataset_Delta_baseline_MCMC, draws = 500) #DOESNT WORK, UNSURE WHY
-#ppc_dens_overlay(y_Dataset_Delta_baseline_MCMC, yrep_Dataset_Delta_baseline_MCMC[1:50, ]) 
-yrep_Dataset_Delta_baseline_MCMC_betareg <- rstanarm::posterior_predict(Dataset_Delta_baseline_MCMC_betareg, draws = 500) #DOESNT WORK, UNSURE WHY
-ppc_dens_overlay(y_Dataset_Delta_baseline_MCMC, yrep_Dataset_Delta_baseline_MCMC_betareg[1:50, ]) 
 #Summarize Posterior
 plot_model(Dataset_Delta_baseline_MCMC, type = "pred", ci.lvl = .95, bpe.color = "red") 
 #emmeans(Dataset_Delta_baseline_MCMC, specs = 'Dataset') 
@@ -162,9 +176,9 @@ describe_posterior(Dataset_Delta_baseline_MCMC) # more overestimation for 9-11
 ```
 Interpretation of the results: after controlling for T1_experienced stress/negemo, people tend to overestimate more when recalling 9/11 negative emotion compared to covid-related stress.
 
-# Shared Analysis 3: Rem ~ Exp1 + Exp2
+# Rem ~ Exp1 + Exp2
 
-Here, we ask the q: how does people reconstruct remembered stress/negemo? We suspect that besides the 'ground truth' T1_experienced, people's current stress will also play a role. Similar to previous analysis, Rem was converted to follow beta distribution.
+Here, we ask the q: how does people reconstruct remembered stress/negemo? We suspect that besides the 'ground truth' T1_experienced, people's current stress will also play a role. Similar to previous analysis, Rem was converted to follow beta distribution. Also, the model specification does not include random effect.
 
 ## Covid
 ```{r}
@@ -175,26 +189,16 @@ Rem_covid_MCMC_weighted <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
                                   family = mgcv::betar, iter= niters, 
                            weights = num_weights_3var, seed = seed_no, data = covid_BRem)
 }
-if (!exists("Rem_covid_MCMC_weighted_betareg")) {
-  Rem_covid_MCMC_weighted_betareg <- stan_betareg(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
-                                      iter= niters, 
-                                      weights = num_weights_3var, seed = seed_no, data = covid_BRem)
-}
+
 
 #Posterior Predictive Check (Ppc)
 y_Rem_covid_MCMC_weighted <- covid_BRem$BCovid_Rem
-#yrep_Rem_covid_MCMC_weighted <- posterior_predict(Rem_covid_MCMC_weighted, draws = 500) #Also broken, IDK why; guessing multiple variables?
-#ppc_dens_overlay(y_Rem_covid_MCMC_weighted, yrep_Rem_covid_MCMC_weighted[1:50, ]) 
-yrep_Rem_covid_MCMC_weighted_betareg <- posterior_predict(Rem_covid_MCMC_weighted_betareg, draws = 500) 
-ppc_dens_overlay(y_Rem_covid_MCMC_weighted, yrep_Rem_covid_MCMC_weighted_betareg[1:50, ]) 
-
 #Summarize Posterior
 #plot_model(Rem_covid_MCMC_weighted, type = "pred", ci.lvl = .95, bpe.color = "red") 
 describe_posterior(Rem_covid_MCMC_weighted)
 mcmc_intervals(as.array(Rem_covid_MCMC_weighted), pars = c('(Intercept)','Covid_Exp1','Covid_Exp2'))
 
-
-# conduct the same analysis w/n weight to see whether the weight changes the results dramactically
+# conduct the same analysis w/n weight specification - results are consistent
 if (!exists("Rem_covid_MCMC_unweighted")) {
 Rem_covid_MCMC_unweighted <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
                                     family = mgcv::betar, iter= niters, seed = seed_no,
@@ -216,24 +220,14 @@ Rem_911_MCMC_T2_weighted <- stan_glm(B911_Rem ~ prev_experience + curr_experienc
                                     family = mgcv::betar, iter= niters, seed=seed_no,
                                     weights = num_weights_updated, data = nine11_BRem_T2)
 }
-if (!exists("Rem_911_MCMC_T2_weighted_betareg")) {
-  Rem_911_MCMC_T2_weighted_betareg <- stan_glm(B911_Rem ~ prev_experience + curr_experience,
-                                       iter= niters, seed=seed_no,
-                                       weights = num_weights_updated, data = nine11_BRem_T2)
-}
 #Posterior Predictive Check (Ppc)
 y_Rem_911_MCMC_T2_weighted <- nine11_BRem_T2$B911_Rem
-#yrep_Rem_911_MCMC_T2_weighted <- posterior_predict(Rem_911_MCMC_T2_weighted, draws = 500) #Also broken, IDK why; guessing multiple variables?
-#ppc_dens_overlay(y_Rem_911_MCMC_T2_weighted, yrep_Rem_911_MCMC_T2_weighted[1:50, ]) 
-yrep_Rem_911_MCMC_T2_weighted_betareg <- posterior_predict(Rem_911_MCMC_T2_weighted_betareg, draws = 500) #Also broken, IDK why; guessing multiple variables?
-ppc_dens_overlay(y_Rem_911_MCMC_T2_weighted, yrep_Rem_911_MCMC_T2_weighted_betareg[1:50, ]) 
 
 #Summarize Posterior
 #plot_model(Rem_911_MCMC_T2_weighted, type = "pred", ci.lvl = .95, bpe.color = "red") 
 describe_posterior(Rem_911_MCMC_T2_weighted)
 
-
-
+# without weight specification the results are consistent
 if (!exists("Rem_911_MCMC_T2_unweighted")) {
 Rem_911_MCMC_T2_unweighted <- stan_glm(B911_Rem ~ prev_experience + curr_experience,
                                      family = mgcv::betar, iter= niters, seed=seed_no,
@@ -244,9 +238,9 @@ describe_posterior(Rem_911_MCMC_T2_unweighted)
 mcmc_intervals(as.array(Rem_911_MCMC_T2_unweighted), pars = c('(Intercept)','prev_experience','curr_experience'))
 ```
 
-# Separate Analysis (9/11): Dev ~ MemTime * Emotion + prev_experience
+# Dev ~ MemTime + prev_experience
 
-Using the 9/11 dataset, we test whether the deviation is a function of Time and Specific Emotion.
+Using the 9/11 dataset, we test whether the deviation is a function of Time.
 ```{r}
 nine11_percent <- nine11_long_avg %>% 
   #mutate(Percent = memdev / twovar_prev_experience) %>% 
@@ -256,8 +250,6 @@ nine11_percent <- nine11_long_avg %>%
   filter(!is.na(Bdev)) %>% 
   filter(!is.na(prev_experience))
 
-#nine11_percent %>% group_by(time) %>% 
-#  summarise(mean=mean(Percent), sd=sd(Percent))
 
 # note: the original data stored in the .rda is wrong. it was operated on percent, while we are actually interested in the raw deviation
 
@@ -270,7 +262,6 @@ Time_avg_911_MCMC_weighted <- stan_glmer(Bdev ~ time + prev_experience + (1|Subj
 #Posterior Predictive Check (Ppc)
 y_Time_avg_911_MCMC_weighted <- nine11_percent$Bdev
 yrep_Time_avg_911_MCMC_weighted <- posterior_predict(Time_avg_911_MCMC_weighted, draws = 500)
-ppc_dens_overlay(y_Time_avg_911_MCMC_weighted, yrep_Time_avg_911_MCMC_weighted[1:50, ]) #Looks fine
 #Summarize Posterior
 plot_model(Time_avg_911_MCMC_weighted, type = "pred", ci.lvl = .95, bpe.color = "red") 
 describe_posterior(Time_avg_911_MCMC_weighted)
@@ -287,100 +278,13 @@ plot_model(Time_avg_911_MCMC_unweighted, type = "pred", ci.lvl = .95, bpe.color 
 #Posterior Predictive Check (Ppc)
 y_Time_avg_911_MCMC_unweighted <- nine11_percent$Bdev
 yrep_Time_avg_911_MCMC_unweighted <- posterior_predict(Time_avg_911_MCMC_unweighted, draws = 500) 
-ppc_dens_overlay(y_Time_avg_911_MCMC_unweighted, yrep_Time_avg_911_MCMC_unweighted[1:50, ]) #Looks fine; changed very little
+very little
 #Summarize Posterior
 describe_posterior(Time_avg_911_MCMC_unweighted)
 
 ```
-Across emotions, people overestimate neg emo more at 5-year follow-up than at 1-year and 10-years follow-up. There is no difference between the deviation of negative emotion recalle at 1-year and 10-years follow-up. 
+People overestimate neg emo more at 3-year follow-up than at 1-year and 10-years follow-up. There is no difference between the deviation of negative emotion recalled at 1-year and 10-years follow-up. 
 
-```{r}
-nine11_wide_subj_dev <- nine11_wide %>% dplyr::select(Subject, item, memdev2, memdev3, memdev4) %>% 
-  pivot_longer(cols = memdev2:memdev4, names_to = 'MemTime', values_to = 'Dev') %>% 
-  mutate(item = relevel(factor(item), ref='frustration')) %>% 
-  mutate(Bdev = beta_squeeze((Dev+4)/8)) %>% 
-  filter(!is.na(Bdev)) %>% ungroup()
-  
-if (!exists("StressOTEmo911_MCMC")) {
-StressOTEmo911_MCMC <- stan_glmer(Bdev ~ MemTime * item + (1|Subject), 
-                                  family = mgcv::betar, 
-                                  iter= niters, seed=seed_no, data = nine11_wide_subj_dev) 
-}
-#Posterior Predictive Check (Ppc)
-y_StressOTEmo911_MCMC <- nine11_wide_subj_dev$Bdev
-yrep_StressOTEmo911_MCMC <- posterior_predict(StressOTEmo911_MCMC, draws = 500) 
-ppc_dens_overlay(y_StressOTEmo911_MCMC, yrep_StressOTEmo911_MCMC[1:50, ]) #This is actually pretty great!
-#Summarize Posterior
-plot_model(StressOTEmo911_MCMC, type = "int", ci.lvl = .95, bpe.color = "red") + facet_grid("item"~"DevTime")
-describe_posterior(StressOTEmo911_MCMC)
-StressOTEmo911_MCMC %>% emmeans(specs = 'MemTime', by = 'item') %>% pairs() %>% plot
-#StressOTEmo911_MCMC %>% emmeans(specs = 'item', by = 'MemTime') %>% pairs() %>% plot # this graph is too messy
-
-```
-This exploratory pairwise comparison suggests a couple of things: 
-
-- For shock, sadness, fear and anger, there is no difference in deviance at 1, 5 or 10 years follow-up survey.
-
-- For confusion, deviation time2 < time4 < time3
-
-- For frustration, time3 = time2 > time4
-
-(not sure what it means, but more on the exploratory side)
-
-# Separate Analysis (9/11): Rem ~ (prev + curr) * time
-
-This analysis is an extension of the Shared analysis 2 by focusing on the interaction between different time point and the impact of prev/curr experience on remembered stress.
-
-```{r}
-nine11_BRem <- nine11_long_avg %>% mutate(time = relevel(factor(time), ref='2')) %>% 
-  group_by(time) %>% mutate(B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
-  filter(!is.na(B911_Rem)) %>% filter(!is.na(prev_experience)) %>% filter(!is.na(curr_experience))
-if (!exists("Rem_911_MCMC_weighted_ref2")) {
-Rem_911_MCMC_weighted_ref2 <- stan_glmer(B911_Rem ~ (prev_experience + curr_experience) * time + (1|Subject),
-                                     family = mgcv::betar, iter= niters, seed = seed_no,
-                                     weights = num_weights_updated, data = nine11_BRem)
-}
-if (!exists("Rem_911_MCMC_weighted_ref3")) {
-Rem_911_MCMC_weighted_ref3 <- stan_glmer(B911_Rem ~ (prev_experience + curr_experience) * time + (1|Subject),
-                                     family = mgcv::betar, iter= niters, seed = seed_no,
-                                     weights = num_weights_updated, data = nine11_BRem %>% mutate(time=relevel(time,ref='3')))
-}
-if (!exists("Rem_911_MCMC_weighted_ref4")) {
-Rem_911_MCMC_weighted_ref4 <- stan_glmer(B911_Rem ~ (prev_experience + curr_experience) * time + (1|Subject),
-                                     family = mgcv::betar, iter= niters, seed = seed_no,
-                                     weights = num_weights_updated, data = nine11_BRem %>% mutate(time=relevel(time,ref='4')))
-}
-#Posterior Predictive Check (Ppc)
-y_Rem_911_MCMC_weighted <- nine11_BRem$B911_Rem
-yrep_Rem_911_MCMC_weighted <- posterior_predict(Rem_911_MCMC_weighted_ref2, draws = 500) #Broken but different error; presumably because multiple variables
-ppc_dens_overlay(y_Rem_911_MCMC_weighted, yrep_Rem_911_MCMC_weighted[1:50, ])
-#Summarize Posterior
-plot_model(Rem_911_MCMC_weighted_ref2, type = "int", ci.lvl = .95, bpe.color = "red") 
-describe_posterior(Rem_911_MCMC_weighted_ref2)
-Rem_911_MCMC_weighted_ref2 %>% emmeans(specs = 'time',by='prev_experience') %>% pairs %>% plot
-Rem_911_MCMC_weighted_ref2 %>% emmeans(specs = 'time',by='curr_experience') %>% pairs %>% plot
-```
-The results from weighted regression is quite interesting. At 1 year follow up, the weight ppl put on prev_experience is larger than that of curr_experience. Compared to 1 year follow up, people at the 5 year and 10 year follow up rely less on prev_experience while there is no difference in the weight people put on curr_experience does not change as a function of time. 
-
-Currently I do not know how to use one model and compare prev_experience and curr_experience at time points other than the baseline... to bypass this probelm, we fit the same model with different reference group and compare whether the 95% CI of prev exp and curr exp overlap with each other when the ref group is different
-
-
-Though there is a prev_experience:time interaction, it seems that at three time points, the predictive power of prev experience is larger than that of curr_experience.
-
-```{r}
-if (!exists("Rem_911_MCMC_unweighted")) {
-Rem_911_MCMC_unweighted <- stan_glmer(B911_Rem ~ (prev_experience + curr_experience) * time + (1|Subject),
-                                     family = mgcv::betar, seed= seed_no, iter= niters, data = nine11_BRem)
-}
-#Posterior Predictive Check (Ppc)
-y_Rem_911_MCMC_unweighted <- nine11_BRem$B911_Rem
-yrep_Rem_911_MCMC_unweighted <- posterior_predict(Rem_911_MCMC_unweighted, draws = 500) #Broken, same error as previously
-ppc_dens_overlay(y_Rem_911_MCMC_unweighted, yrep_Rem_911_MCMC_unweighted[1:50, ])
-#Summarize Posterior
-plot_model(Rem_911_MCMC_unweighted, type = "pred", ci.lvl = .95, bpe.color = "red") 
-describe_posterior(Rem_911_MCMC_unweighted)
-
-```
 
 # Separate Analysis (covid): Overestimation ~ Delta Emotion Well-being
 
@@ -388,8 +292,6 @@ Finally, we use Covid dataset and see whether there is any association between d
 
 
 ```{r}
-c(covid_wide$PCA_T1 %>% mean(na.rm=T), covid_wide$PCA_T1 %>% sd(na.rm=T))
-c(covid_wide$PCA_T2 %>% mean(na.rm=T), covid_wide$PCA_T2 %>% sd(na.rm=T))
 # sanity check: people's emotion well being becomes better from T1 to T2.
 if (!exists("covid_PCA_MCMC")) {
 covid_PCA_MCMC <- stan_glm(emo_well_being_delta ~ 1,
@@ -400,13 +302,13 @@ covid_PCA_MCMC <- stan_glm(emo_well_being_delta ~ 1,
 y_covid_PCA_MCMC <- covid_wide %>% filter(emo_well_being_delta != "NA") %>% dplyr::select(emo_well_being_delta)
 y_covid_PCA_MCMC <- y_covid_PCA_MCMC$emo_well_being_delta
 yrep_covid_PCA_MCMC <- posterior_predict(covid_PCA_MCMC, draws = 500) #Good, but less peaked then the data
-ppc_dens_overlay(y_covid_PCA_MCMC, yrep_covid_PCA_MCMC[1:50, ])
 #Summarize Posterior
 plot_model(covid_PCA_MCMC, type = "pred", ci.lvl = .95, bpe.color = "red") 
 describe_posterior(covid_PCA_MCMC)
 ```
 
 ```{r}
+# controlled analysis: adding Covid_Exp1 as covariate
 covid_percent <- covid_wide %>% 
   mutate(BCovid_Dev = beta_squeeze((Covid_Dev+4)/8)) %>% 
   mutate(Percent = Covid_Dev / twovar_Covid_Exp1) %>% filter(!is.na(Percent)) %>% 
@@ -434,39 +336,24 @@ covid_delta_EmoWell_MCMC_both_2var <- stan_glm(BCovid_Dev ~ emo_well_being_delta
                                           iter= niters, weights = num_weights_2var,
                                           covid_percent %>% filter(!is.na(twovar_Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))
 }
-if (!exists("covid_delta_EmoWell_MCMC_betareg")) {
-  covid_delta_EmoWell_MCMC_betareg <- stan_betareg(BCovid_Dev ~ emo_well_being_delta + Covid_Exp1,
-                                       seed = seed_no,
-                                       iter= niters, weights = num_weights_3var,
-                                       covid_percent %>% filter(!is.na(Covid_Exp1)))
-}
-
-if (!exists("covid_delta_EmoWell_MCMC_both_betareg")) {
-  covid_delta_EmoWell_MCMC_both_betareg <- stan_betareg(BCovid_Dev ~ emo_well_being_delta + twovar_Covid_Exp1 + Covid_Exp2,
-                                                        seed = seed_no,
-                                                        iter= niters, weights = num_weights_3var,
-                                                        covid_percent %>% filter(!is.na(twovar_Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))
-}
-if (!exists("covid_delta_EmoWell_MCMC_both_2var_betareg")) {
-  covid_delta_EmoWell_MCMC_both_2var_betareg <- stan_betareg(BCovid_Dev ~ emo_well_being_delta + twovar_Covid_Exp1 + Covid_Exp2,
-                                                             seed = seed_no,
-                                                             iter= niters, weights = num_weights_2var,
-                                                             covid_percent %>% filter(!is.na(twovar_Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))
-}
 
 #Posterior Predictive Check (Ppc)
 #y_covid_percent_EmoWell_MCMC <- covid_percent$Percent
 #yrep_covid_percent_EmoWell_MCMC <- posterior_predict(covid_percent_EmoWell_MCMC, draws = 500) #Broken
 y_covid_delta_EmoWell_MCMC <- (covid_percent %>% filter(!is.na(twovar_Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))$BCovid_Dev
-yrep_covid_delta_EmoWell_MCMC_betareg <- posterior_predict(covid_delta_EmoWell_MCMC_both_betareg, draws = 500) #Broken
-ppc_dens_overlay(y_covid_delta_EmoWell_MCMC, yrep_covid_delta_EmoWell_MCMC_betareg[1:50, ])
 
 ```
 
 The results suggest that there is a positive correlation between delta emo well being and deviance. 
 ```{r}
+# the code below was used to save bayesian regression objects
+save(MemType_covid_MCMC, MemType_911_MCMC_T2, 
+            Dataset_Delta_baseline_MCMC, Rem_covid_MCMC_weighted, Rem_covid_MCMC_unweighted, 
+            Rem_911_MCMC_T2_weighted, Rem_911_MCMC_T2_unweighted, 
+            covid_PCA_MCMC, covid_delta_EmoWell_MCMC, covid_delta_EmoWell_MCMC_both, covid_delta_EmoWell_MCMC_both_2var, file='BayesRegObj.RData')
 sessionInfo()
 ```
+
 
 
 

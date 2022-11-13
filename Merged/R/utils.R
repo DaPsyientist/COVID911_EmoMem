@@ -6,7 +6,7 @@
 if(!require("pacman")) install.packages("pacman") #Install pacman to facilitate package installing/loading
 p_load(tidyverse, ggplot2,  dplyr, BayesFactor, brms, lme4, sjPlot, rstanarm, bayestestR,
        sjPlot, car, multcomp, tidyr, betareg, glmmTMB, foreign,magrittr, bayesplot, emmeans,
-       ggpubr) #Load necessary rPackages
+       ggpubr, Hmisc) #Load necessary rPackages
 devtools::install_github("traversc/trqwe")
 options(mc.cores = parallel::detectCores())
 beta_squeeze <- function(y) {

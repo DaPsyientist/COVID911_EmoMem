@@ -1,5 +1,4 @@
-## ENSURE THEORETICAL DISTRIBUTION MATCHES EMPIRICAL
-## ENSURE PRIOR WEAK ARE ALL WEAK
+library(rstanarm, bayestestR)
 
 #Specify Prior Distributions
 generic_veryweak <- normal(location = 0, scale = 1, autoscale = FALSE) #Standard stan_glm prior: N(0, 2.5)
@@ -8,8 +7,9 @@ InterPrior_weak <- normal(location = 0, scale = .5, autoscale = FALSE)
 InterPrior_veryweak <- normal(location = 0, scale = 1, autoscale = FALSE)
 
 #Load all files for prior sensitivity Analysis
-load(file = "/Users/jcast/Desktop/G2/Covid_Proj/911nCovid_StressMemory_PS.rda")
-load(file = "./911nCovid_StressMemory_mixed.rda")
+load(file = "./911nCovid_Data.rda")
+load(file = "./911nCovid_StressMemory_PSBF.rda")
+load(file = "./911nCovid_StressMemory_PS.rda")
 load(file = "./911nCovid_StressMemory_simple.rda")
 
 #### MCMC Prior Sensitivity ####
@@ -18,7 +18,6 @@ load(file = "./911nCovid_StressMemory_simple.rda")
 #Standard priors (0, 2.5)
 prior_summary(MemType_covid_MCMC) #Normal Prior ~ (0,2.5) & (0, 2.5)
 check_prior(MemType_covid_MCMC, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(MemType_covid_MCMC, method = "lakeland") #Posterior within 95% HDI of prior #informative
 
 #Very Weakly Informative Prior (0, 1)
 if (!exists("MemType_covid_MCMC_VeryWeak")) {
@@ -27,7 +26,7 @@ MemType_covid_MCMC_VeryWeak <- stan_glmer(BStress ~ MemType + (1|Subject),
                                  prior = generic_veryweak, prior_intercept = InterPrior_veryweak, data = covid_long_type)
 }
 check_prior(MemType_covid_MCMC_VeryWeak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(MemType_covid_MCMC_VeryWeak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
+
 #Weak Prior (0, .5)
 if (!exists("MemType_covid_MCMC_Weak")) {
 MemType_covid_MCMC_Weak <- stan_glmer(BStress ~ MemType + (1|Subject), 
@@ -35,7 +34,6 @@ MemType_covid_MCMC_Weak <- stan_glmer(BStress ~ MemType + (1|Subject),
                                       prior = generic_weak, prior_intercept = InterPrior_weak, data = covid_long_type)
 }
 check_prior(MemType_covid_MCMC_Weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(MemType_covid_MCMC_Weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
 ##911
 #Standard priors (0, 2.5)
@@ -47,7 +45,6 @@ MemType_911_MCMC_T2_VeryWeak <- stan_glmer(BNegEmo ~ MemType + (1|Subject),
                                   prior = generic_veryweak, prior_intercept = InterPrior_veryweak, data = nine11_long_type)
 }
 check_prior(MemType_911_MCMC_T2_VeryWeak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(MemType_911_MCMC_T2_VeryWeak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
 #Weak Prior (0, .5)
 if (!exists("MemType_911_MCMC_T2_Weak")) {
@@ -56,48 +53,23 @@ MemType_911_MCMC_T2_Weak <- stan_glmer(BNegEmo ~ MemType + (1|Subject),
                                            prior = generic_weak, prior_intercept = InterPrior_weak, data = nine11_long_type)
 }
 check_prior(MemType_911_MCMC_T2_Weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(MemType_911_MCMC_T2_Weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
 # Shared Analysis 2: Percent ~ Dataset (Covid/911_T2) 
 ##Percentage
 prior_summary(Dataset_Percent_MCMC) #Normal Prior ~ (0,2.5) & (0, 2.5)
 check_prior(Dataset_Percent_MCMC, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(Dataset_Percent_MCMC, method = "lakeland") #Posterior within 95% HDI of prior #informative
 
 #Very Weakly Informative Prior (0, 1)
 if (!exists("Dataset_Percent_MCMC_VeryWeak")) {
 Dataset_Percent_MCMC_VeryWeak <- stan_glm(Percent ~ Dataset, family = "gaussian", iter= niters, seed=seed_no, prior = generic_veryweak, prior_intercept = InterPrior_veryweak, data = combined_percent)
 }
 check_prior(Dataset_Percent_MCMC_VeryWeak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Dataset_Percent_MCMC_VeryWeak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
 #Weak Informative Prior (0, .5)
 if (!exists("Dataset_Percent_MCMC_Weak")) {
 Dataset_Percent_MCMC_Weak <- stan_glm(Percent ~ Dataset, family = "gaussian", iter= niters, seed=seed_no, prior = generic_weak, prior_intercept = InterPrior_weak, data = combined_percent)
 }
 check_prior(Dataset_Percent_MCMC_Weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Dataset_Percent_MCMC_Weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
-
-## Beta Dev
-prior_summary(Dataset_Delta_baseline_MCMC_betareg) #Normal Prior ~ (0,2.5) & (0, 2.5)
-check_prior(Dataset_Delta_baseline_MCMC_betareg, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Dataset_Delta_baseline_MCMC_betareg, method = "lakeland") #Posterior within 95% HDI of prior; #informative
-
-#Very Weakly Informative Prior (0, 1)
-if (!exists("Dataset_Delta_baseline_MCMC_betareg_VeryWeak")) {
-Dataset_Delta_baseline_MCMC_betareg_VeryWeak <- stan_betareg(Bdev ~ Dataset + twovar_prev, prior = generic_veryweak, prior_intercept = InterPrior_veryweak,
-                                                             iter= niters, seed=seed_no, seed=seed_no, data = combined_percent) 
-}
-check_prior(Dataset_Delta_baseline_MCMC_betareg_VeryWeak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Dataset_Delta_baseline_MCMC_betareg_VeryWeak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
-
-#Weak Informative Prior (0, .5)
-if (!exists("Dataset_Delta_baseline_MCMC_betareg_Weak")) {
-Dataset_Delta_baseline_MCMC_betareg_Weak <- stan_betareg(Bdev ~ Dataset + twovar_prev, prior = generic_weak, prior_intercept = InterPrior_weak,
-                                                             iter= niters, seed=seed_no, data = combined_percent) 
-}
-check_prior(Dataset_Delta_baseline_MCMC_betareg_Weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Dataset_Delta_baseline_MCMC_betareg_Weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
 
 # Shared Analysis 3: Rem ~ Exp1 + Exp2 
@@ -105,7 +77,7 @@ check_prior(Dataset_Delta_baseline_MCMC_betareg_Weak, method = "lakeland") #Post
 ## Stan_GLM
 prior_summary(Rem_covid_MCMC_weighted) #Normal Prior ~ (0,2.5) & (0, 2.5)
 check_prior(Rem_covid_MCMC_weighted, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(Rem_covid_MCMC_weighted, method = "lakeland") #Posterior within 95% HDI of prior #informative
+
 #Very Weakly Informative Prior (0, 1)
 if (!exists("Rem_covid_MCMC_weighted_veryweak")) {
 Rem_covid_MCMC_weighted_veryweak <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
@@ -113,7 +85,7 @@ Rem_covid_MCMC_weighted_veryweak <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp
                                     weights = num_weights_3var, seed = seed_no, prior = generic_veryweak, prior_intercept = InterPrior_veryweak, data = covid_BRem)
 }
 check_prior(Rem_covid_MCMC_weighted_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Rem_covid_MCMC_weighted_veryweak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
+
 #Weak Informative Prior (0, .5)
 if (!exists("Rem_covid_MCMC_weighted_weak")) {
 Rem_covid_MCMC_weighted_weak <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
@@ -121,32 +93,11 @@ Rem_covid_MCMC_weighted_weak <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
                                              weights = num_weights_3var, seed = seed_no, prior = generic_weak, prior_intercept = InterPrior_weak, data = covid_BRem)
 }
 check_prior(Rem_covid_MCMC_weighted_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Rem_covid_MCMC_weighted_weak, method = "lakeland") #GPosterior within 95% HDI of prior; #informative
-## Stan_betareg
-prior_summary(Rem_covid_MCMC_weighted_betareg) #Normal Prior ~ (0,2.5) & (0, 2.5)
-check_prior(Rem_covid_MCMC_weighted_betareg, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(Rem_covid_MCMC_weighted_betareg, method = "lakeland") #Posterior within 95% HDI of prior #informative
-#Very Weakly Informative Prior (0, 1)
-if (!exists("Rem_covid_MCMC_weighted_betareg_veryweak")) {
-Rem_covid_MCMC_weighted_betareg_veryweak <- stan_betareg(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
-                                                iter= niters, prior = generic_veryweak, prior_intercept = InterPrior_veryweak,
-                                                weights = num_weights_3var, seed = seed_no, data = covid_BRem)
-}
-check_prior(Rem_covid_MCMC_weighted_betareg_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Rem_covid_MCMC_weighted_betareg_veryweak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
-#Weak Informative Prior (0, .5)
-if (!exists("Rem_covid_MCMC_weighted_betareg_weak")) {
-Rem_covid_MCMC_weighted_betareg_weak <- stan_betareg(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
-                                                         iter= niters, prior = generic_weak, prior_intercept = InterPrior_weak,
-                                                         weights = num_weights_3var, seed = seed_no, data = covid_BRem)
-}
-check_prior(Rem_covid_MCMC_weighted_betareg_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Rem_covid_MCMC_weighted_betareg_weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
 ### 9/11
 prior_summary(Rem_911_MCMC_T2_weighted_betareg) #Normal Prior ~ (0,2.5) & (0, 2.5)
 check_prior(Rem_911_MCMC_T2_weighted_betareg, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(Rem_911_MCMC_T2_weighted_betareg, method = "lakeland") #Posterior within 95% HDI of prior #informative
+
 #Very Weakly Informative Prior (0, 1)
 if (!exists("Rem_911_MCMC_T2_weighted_betareg_veryweak")) {
 Rem_911_MCMC_T2_weighted_betareg_veryweak <- stan_glm(B911_Rem ~ prev_experience + curr_experience,
@@ -154,7 +105,7 @@ Rem_911_MCMC_T2_weighted_betareg_veryweak <- stan_glm(B911_Rem ~ prev_experience
                                              weights = num_weights_updated, data = nine11_BRem_T2)
 }
 check_prior(Rem_911_MCMC_T2_weighted_betareg_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Rem_911_MCMC_T2_weighted_betareg_veryweak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
+
 #Weak Informative Prior (0, .5)
 if (!exists("Rem_911_MCMC_T2_weighted_betareg_weak")) {
 Rem_911_MCMC_T2_weighted_betareg_weak <- stan_glm(B911_Rem ~ prev_experience + curr_experience,
@@ -162,56 +113,35 @@ Rem_911_MCMC_T2_weighted_betareg_weak <- stan_glm(B911_Rem ~ prev_experience + c
                                                       weights = num_weights_updated, data = nine11_BRem_T2)
 }
 check_prior(Rem_911_MCMC_T2_weighted_betareg_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Rem_911_MCMC_T2_weighted_betareg_weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
-
-# Separate Analysis (9/11): Percent ~ MemTime * Emotion 
+# Separate Analysis (9/11): Percent ~ MemTime
 prior_summary(Time_avg_911_MCMC_weighted) #Normal Prior ~ (0,2.5) & (0, 2.5)
 check_prior(Time_avg_911_MCMC_weighted, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(Time_avg_911_MCMC_weighted, method = "lakeland") #Posterior within 95% HDI of prior #informative
+
 #Very Weakly Informative Prior (0, 1)
 if (!exists("Time_avg_911_MCMC_weighted_veryweak")) {
-Time_avg_911_MCMC_weighted_veryweak <- stan_glm(Percent ~ time, 
-                                       family = 'gaussian', iter= niters, prior = generic_veryweak, prior_intercept = InterPrior_veryweak,
-                                       weights = num_weights_updated, seed = seed_no,
-                                       data = nine11_percent)
+  Time_avg_911_MCMC_weighted_veryweak <- stan_glm(Percent ~ time, 
+                                                  family = 'gaussian', iter= niters, prior = generic_veryweak, prior_intercept = InterPrior_veryweak,
+                                                  weights = num_weights_updated, seed = seed_no,
+                                                  data = nine11_percent)
 }
 check_prior(Time_avg_911_MCMC_weighted_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Time_avg_911_MCMC_weighted_veryweak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
+
 #Weak Informative Prior (0, .5)
 if (!exists("Time_avg_911_MCMC_weighted_weak")) {
-Time_avg_911_MCMC_weighted_weak <- stan_glm(Percent ~ time, 
-                                                family = 'gaussian', iter= niters, prior = generic_weak, prior_intercept = InterPrior_weak,
-                                                weights = num_weights_updated, seed = seed_no, 
-                                                data = nine11_percent)
+  Time_avg_911_MCMC_weighted_weak <- stan_glm(Percent ~ time, 
+                                              family = 'gaussian', iter= niters, prior = generic_weak, prior_intercept = InterPrior_weak,
+                                              weights = num_weights_updated, seed = seed_no, 
+                                              data = nine11_percent)
 }
 check_prior(Time_avg_911_MCMC_weighted_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Time_avg_911_MCMC_weighted_weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
-## Percent ~ Time * Emotion
-prior_summary(StressOTEmo911_MCMC) #Normal Prior ~ (0,2.5) & (0, 2.5)
-check_prior(StressOTEmo911_MCMC, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(StressOTEmo911_MCMC, method = "lakeland") #Posterior within 95% HDI of prior #informative
-#Very Weakly Informative Prior (0, 1)
-if (!exists("StressOTEmo911_MCMC_veryweak")) {
-StressOTEmo911_MCMC_veryweak <- stan_glmer(Percent ~ MemTime * item + (1|Subject), 
-                                  family = "gaussian", iter= niters, seed=seed_no, prior = generic_veryweak, prior_intercept = InterPrior_veryweak, data = nine11_wide_subj_percent) 
-}
-check_prior(StressOTEmo911_MCMC_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(StressOTEmo911_MCMC_veryweak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
-#Weak Informative Prior (0, .5)
-if (!exists("StressOTEmo911_MCMC_weak")) {
-StressOTEmo911_MCMC_weak <- stan_glmer(Percent ~ MemTime * item + (1|Subject), 
-                                           family = "gaussian", iter= niters, seed=seed_no, prior = generic_weak, prior_intercept = InterPrior_weak, data = nine11_wide_subj_percent) 
-}
-check_prior(StressOTEmo911_MCMC_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(StressOTEmo911_MCMC_weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
 
 ## Separate Analysis (9/11): Rem ~ (prev + curr) * time 
 prior_summary(Rem_911_MCMC_weighted) #Normal Prior ~ (0,2.5) & (0, 2.5)
 check_prior(Rem_911_MCMC_weighted, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(Rem_911_MCMC_weighted, method = "lakeland") #Posterior within 95% HDI of prior #informative
+
 #Very Weakly Informative Prior (0, 1)
 if (!exists("Rem_911_MCMC_weighted_veryweak")) {
 Rem_911_MCMC_weighted_veryweak <- stan_glmer(B911_Rem ~ (prev_experience + curr_experience) * time + (1|Subject),
@@ -220,7 +150,7 @@ Rem_911_MCMC_weighted_veryweak <- stan_glmer(B911_Rem ~ (prev_experience + curr_
                                     weights = num_weights_updated, data = nine11_BRem)
 }
 check_prior(Rem_911_MCMC_weighted_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Rem_911_MCMC_weighted_veryweak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
+
 #Weak Informative Prior (0, .5)
 if (!exists("Rem_911_MCMC_weighted_weak")) {
 Rem_911_MCMC_weighted_weak <- stan_glmer(B911_Rem ~ (prev_experience + curr_experience) * time + (1|Subject),
@@ -229,13 +159,12 @@ Rem_911_MCMC_weighted_weak <- stan_glmer(B911_Rem ~ (prev_experience + curr_expe
                                              weights = num_weights_updated, data = nine11_BRem)
 }
 check_prior(Rem_911_MCMC_weighted_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(Rem_911_MCMC_weighted_weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
 
 # Separate Analysis (covid): Overestimation ~ Delta Emotion Well-being 
 prior_summary(covid_PCA_MCMC) #Normal Prior ~ (0,2.5) & (0, 2.5)
 check_prior(covid_PCA_MCMC, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(covid_PCA_MCMC, method = "lakeland") #Posterior within 95% HDI of prior #informative
+
 #Very Weakly Informative Prior (0, 1)
 if (!exists("covid_PCA_MCMC_veryweak")) {
 covid_PCA_MCMC_veryweak <- stan_glm(emo_well_being_delta ~ 1,
@@ -244,7 +173,7 @@ covid_PCA_MCMC_veryweak <- stan_glm(emo_well_being_delta ~ 1,
                            iter= niters, seed=seed_no, data = covid_wide)
 }
 check_prior(covid_PCA_MCMC_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(covid_PCA_MCMC_veryweak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
+
 #Weak Informative Prior (0, .5)
 if (!exists("covid_PCA_MCMC_weak")) {
 covid_PCA_MCMC_weak <- stan_glm(emo_well_being_delta ~ 1,
@@ -253,14 +182,13 @@ covid_PCA_MCMC_weak <- stan_glm(emo_well_being_delta ~ 1,
                                     iter= niters, seed=seed_no, data = covid_wide)
 }
 check_prior(covid_PCA_MCMC_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #Uninformative
-check_prior(covid_PCA_MCMC_weak, method = "lakeland") #Posterior within 95% HDI of prior; #informative
 
 
 ## overestimation ~ delta emo well-being
 ##Stan GLM
 prior_summary(covid_delta_EmoWell_MCMC_both) #Normal Prior ~ (0,2.5) & (0, 2.5)
 check_prior(covid_delta_EmoWell_MCMC_both, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(covid_delta_EmoWell_MCMC_both, method = "lakeland") #Posterior within 95% HDI of prior #informative
+
 #Very Weakly Informative Prior (0, 1)
 if (!exists("covid_delta_EmoWell_MCMC_both_veryweak")) {
 covid_delta_EmoWell_MCMC_both_veryweak <- stan_glm(BCovid_Dev ~ emo_well_being_delta + twovar_Covid_Exp1 + Covid_Exp2,
@@ -270,7 +198,7 @@ covid_delta_EmoWell_MCMC_both_veryweak <- stan_glm(BCovid_Dev ~ emo_well_being_d
                                           covid_percent %>% filter(!is.na(Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))
 }
 check_prior(covid_delta_EmoWell_MCMC_both_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(covid_delta_EmoWell_MCMC_both_veryweak, method = "lakeland") #Posterior within 95% HDI of prior #informative
+
 #Weak Informative Prior (0, .5)
 if (!exists("covid_delta_EmoWell_MCMC_both_weak")) {
 covid_delta_EmoWell_MCMC_both_weak <- stan_glm(BCovid_Dev ~ emo_well_being_delta + twovar_Covid_Exp1 + Covid_Exp2,
@@ -280,32 +208,6 @@ covid_delta_EmoWell_MCMC_both_weak <- stan_glm(BCovid_Dev ~ emo_well_being_delta
                                                    covid_percent %>% filter(!is.na(Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))
 }
 check_prior(covid_delta_EmoWell_MCMC_both_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(covid_delta_EmoWell_MCMC_both_weak, method = "lakeland") #Posterior within 95% HDI of prior #informative
-
-##Stan Betareg
-prior_summary(covid_delta_EmoWell_MCMC_both_betareg) #Normal Prior ~ (0,2.5) & (0, 2.5)
-check_prior(covid_delta_EmoWell_MCMC_both_betareg, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(covid_delta_EmoWell_MCMC_both_betareg, method = "lakeland") #Posterior within 95% HDI of prior #informative
-#Very Weakly Informative Prior (0, 1)
-if (!exists("covid_delta_EmoWell_MCMC_both_betareg_veryweak")) {
-covid_delta_EmoWell_MCMC_both_betareg_veryweak <- stan_betareg(BCovid_Dev ~ emo_well_being_delta + twovar_Covid_Exp1 + Covid_Exp2,
-                                                      seed = seed_no, 
-                                                      prior = generic_veryweak, prior_intercept = InterPrior_veryweak,
-                                                      iter= niters, weights = num_weights_3var,
-                                                      covid_percent %>% filter(!is.na(twovar_Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))
-}
-check_prior(covid_delta_EmoWell_MCMC_both_betareg_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(covid_delta_EmoWell_MCMC_both_betareg_veryweak, method = "lakeland") #Posterior within 95% HDI of prior #informative
-#Weak Informative Prior (0, .5)
-if (!exists("covid_delta_EmoWell_MCMC_both_betareg_weak")) {
-covid_delta_EmoWell_MCMC_both_betareg_weak <- stan_betareg(BCovid_Dev ~ emo_well_being_delta + twovar_Covid_Exp1 + Covid_Exp2,
-                                                               seed = seed_no,
-                                                               prior = generic_weak, prior_intercept = InterPrior_weak,
-                                                               iter= niters, weights = num_weights_3var,
-                                                               covid_percent %>% filter(!is.na(twovar_Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))
-}
-check_prior(covid_delta_EmoWell_MCMC_both_betareg_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(covid_delta_EmoWell_MCMC_both_betareg_weak, method = "lakeland") #Posterior within 95% HDI of prior #informative
 
 
 #### Evaluate prior influence ####
@@ -334,31 +236,16 @@ Dataset_Percent_MCMC_VeryWeakBF <- bayesfactor_parameters(Dataset_Percent_MCMC_V
 plot(Dataset_Percent_MCMC_VeryWeakBF)
 Dataset_Percent_MCMC_WeakBF <- bayesfactor_parameters(Dataset_Percent_MCMC_Weak, null = 0) #Conclusive evidence for both
 plot(Dataset_Percent_MCMC_WeakBF)
-#Beta Dev
-Dataset_Delta_baseline_MCMC_betareg_standardBF <- bayesfactor_parameters(Dataset_Delta_baseline_MCMC_betareg, null = 0) #Conclusive evidence for both
-plot(Dataset_Delta_baseline_MCMC_betareg_standardBF)  
-Dataset_Delta_baseline_MCMC_betareg_VeryWeakBF <- bayesfactor_parameters(Dataset_Delta_baseline_MCMC_betareg_VeryWeak, null = 0) #Conclusive evidence for both
-plot(Dataset_Delta_baseline_MCMC_betareg_VeryWeakBF)
-Dataset_Delta_baseline_MCMC_betareg_WeakBF <- bayesfactor_parameters(Dataset_Delta_baseline_MCMC_betareg_Weak, null = 0) #Conclusive evidence for both
-plot(Dataset_Delta_baseline_MCMC_betareg_WeakBF)
 
 
 # Shared Analysis 3: Rem ~ Exp1 + Exp2 
 ### COVID-19
-## Stan_GLM
 Rem_covid_MCMC_weighted_standardBF <- bayesfactor_parameters(Rem_covid_MCMC_weighted, null = 0) #Conclusive evidence for both
 plot(Rem_covid_MCMC_weighted_standardBF)  
 Rem_covid_MCMC_weighted_veryweakBF <- bayesfactor_parameters(Rem_covid_MCMC_weighted_veryweak, null = 0) #Conclusive evidence for both
 plot(Rem_covid_MCMC_weighted_veryweakBF)
 Rem_covid_MCMC_weighted_weakBF <- bayesfactor_parameters(Rem_covid_MCMC_weighted_weak, null = 0) #Conclusive evidence for both
 plot(Rem_covid_MCMC_weighted_weakBF)
-## Stan_betareg
-Rem_covid_MCMC_weighted_betareg_standardBF <- bayesfactor_parameters(Rem_covid_MCMC_weighted_betareg, null = 0) #Conclusive evidence for both
-plot(Rem_covid_MCMC_weighted_betareg_standardBF)  
-Rem_covid_MCMC_weighted_betareg_veryweakBF <- bayesfactor_parameters(Rem_covid_MCMC_weighted_betareg_veryweak, null = 0) #Conclusive evidence for both
-plot(Rem_covid_MCMC_weighted_betareg_veryweakBF)
-Rem_covid_MCMC_weighted_betareg_weakBF <- bayesfactor_parameters(Rem_covid_MCMC_weighted_betareg_weak, null = 0) #Conclusive evidence for both
-plot(Rem_covid_MCMC_weighted_betareg_weakBF)
 
 ### 9/11
 Rem_911_MCMC_T2_weighted_betareg_standardBF <- bayesfactor_parameters(Rem_911_MCMC_T2_weighted_betareg, null = 0) #Conclusive evidence for both
@@ -368,13 +255,6 @@ plot(Rem_911_MCMC_T2_weighted_betareg_veryweakBF)
 Rem_911_MCMC_T2_weighted_betareg_weakBF <- bayesfactor_parameters(Rem_911_MCMC_T2_weighted_betareg_weak, null = 0) #Conclusive evidence for both
 plot(Rem_911_MCMC_T2_weighted_betareg_weakBF)
 
-# Separate Analysis (9/11): Percent ~ MemTime * Emotion 
-Time_avg_911_MCMC_weighted_standardBF <- bayesfactor_parameters(Time_avg_911_MCMC_weighted, null = 0) #Conclusive evidence for both
-plot(Time_avg_911_MCMC_weighted_standardBF)  
-Time_avg_911_MCMC_weighted_veryweakBF <- bayesfactor_parameters(Time_avg_911_MCMC_weighted_veryweak, null = 0) #Conclusive evidence for both
-plot(Time_avg_911_MCMC_weighted_veryweakBF)
-Time_avg_911_MCMC_weighted_weakBF <- bayesfactor_parameters(Time_avg_911_MCMC_weighted_weak, null = 0) #Conclusive evidence for both
-plot(Time_avg_911_MCMC_weighted_weakBF)
 
 ## Separate Analysis (9/11): Rem ~ (prev + curr) * time 
 Rem_911_MCMC_weighted_standardBF <- bayesfactor_parameters(Rem_911_MCMC_weighted, null = 0) #Conclusive evidence for both
@@ -393,9 +273,7 @@ covid_PCA_MCMC_weakBF <- bayesfactor_parameters(covid_PCA_MCMC_weak, null = 0) #
 plot(covid_PCA_MCMC_weakBF)
 #Check prior on both models (informative x 2)
 check_prior(covid_PCA_MCMC_veryweak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(covid_PCA_MCMC_veryweak, method = "lakeland") #Posterior within 95% HDI of prior #informative
 check_prior(covid_PCA_MCMC_weak, method = "gelman") #Gelman Method ~ SD of posterior > .1 SD of prior; #uninformative
-check_prior(covid_PCA_MCMC_weak, method = "lakeland") #Posterior within 95% HDI of prior #informative
 
 
 ## overestimation ~ delta emo well-being
@@ -406,13 +284,6 @@ covid_delta_EmoWell_MCMC_both_veryweakBF <- bayesfactor_parameters(covid_delta_E
 plot(covid_delta_EmoWell_MCMC_both_veryweakBF)
 covid_delta_EmoWell_MCMC_both_weakBF <- bayesfactor_parameters(covid_delta_EmoWell_MCMC_both_weak, null = 0) #Conclusive evidence for both
 plot(covid_delta_EmoWell_MCMC_both_weakBF)
-##Stan Betareg
-covid_delta_EmoWell_MCMC_both_betareg_standardBF <- bayesfactor_parameters(covid_delta_EmoWell_MCMC_both_betareg, null = 0) #Conclusive evidence for both
-plot(covid_delta_EmoWell_MCMC_both_betareg_standardBF)  
-covid_delta_EmoWell_MCMC_both_betareg_veryweakBF <- bayesfactor_parameters(covid_delta_EmoWell_MCMC_both_betareg_veryweak, null = 0) #Conclusive evidence for both
-plot(covid_delta_EmoWell_MCMC_both_betareg_veryweakBF)
-covid_delta_EmoWell_MCMC_both_betareg_weakBF <- bayesfactor_parameters(covid_delta_EmoWell_MCMC_both_betareg_weak, null = 0) #Conclusive evidence for both
-plot(covid_delta_EmoWell_MCMC_both_betareg_weakBF)
 
 #### Prior Predictive Check ####
 ### Analysis 1: Stress (NegEmo) ~ type (T1_experienced/T2_remembered/T2_experienced) [beta] 
@@ -491,33 +362,6 @@ for(i in 1:nsims) Percent_rep[i,] <- beta0[i] + beta1[i]*combined_percent$Percen
 str(Percent_rep)                        ## 100 response vectors (each of length 85)
 #Check fit
 bayesplot::pp_check(combined_percent$Percent_c[,], Percent_rep, ppc_dens_overlay)+ xlim(c(-2.5, 2.5))
-# Seems eh
-
-### Analysis:  Change Perc x Dataset
-combined_percent$Bdev
-prior_summary(Dataset_Delta_baseline_MCMC_betareg_Weak)
-summary(Dataset_Delta_baseline_MCMC_betareg_Weak)
-
-nsims <- 100
-#Simulate data distribution based on prior
-n = nrow(combined_percent)
-combined_percent$Bdev_c <- scale(combined_percent$Bdev, scale = FALSE) # Centering DV
-combined_percent$twovar_prev_c <- scale(combined_percent$twovar_prev, scale = FALSE) # Centering DV
-
-set.seed(123)
-sigma <- rexp(nsims, rate = 34.6)               ## Standard phi
-hist(sigma)
-beta0 <- rnorm(nsims, mean = 0, sd = .5)        ## prior for intercept (gives enough range for heat scale)
-hist(beta0)
-beta1 <- rnorm(nsims, mean = 0, sd = .5)        ## vague prior for slope
-hist(beta1)
-beta2 <- rnorm(nsims, mean = 0, sd = .5)        ## vague prior for slope
-hist(beta2)
-PercentData_rep <- matrix(NA, nsims, n)     ## initialize nsims x n matrix
-for(i in 1:nsims) PercentData_rep[i,] <- beta0[i] + beta1[i]*combined_percent$Bdev_c + beta2[i]*combined_percent$twovar_prev_c + rnorm(n, mean = 0, sd = sigma[i])
-str(PercentData_rep)                        ## 100 response vectors (each of length 85)
-#Check fit
-bayesplot::pp_check(combined_percent$Bdev_c[,], PercentData_rep, ppc_dens_overlay)+ xlim(c(-2.5, 2.5))
 # Seems eh
 
 # Shared Analysis 3: Rem ~ Exp1 + Exp2 
@@ -604,7 +448,7 @@ bayesplot::pp_check(nine11_percent$Percent_c[,], Percent911_rep, ppc_dens_overla
 # Seems good
 
 
-### Analysis (911): Rem Stress ~
+### Analysis (911): Rem ~ (prev + curr) * time 
 nine11_BRem$B911_Rem
 prior_summary(Rem_911_MCMC_weighted_weak)
 summary(Rem_911_MCMC_weighted_weak)
@@ -644,39 +488,3 @@ str(B911Rem_rep)                        ## 100 response vectors (each of length 
 #Check fit
 bayesplot::pp_check(nine11_BRem$B911_Rem_c[,], B911Rem_rep, ppc_dens_overlay)+ xlim(c(-2.5, 2.5))
 # Seems okay
-
-
-#MemType_covid_MCMC_Weak *
-#MemType_911_MCMC_T2_Weak *
-#Dataset_Percent_MCMC_Weak *
-#Dataset_Delta_baseline_MCMC_betareg_Weak *
-#Rem_covid_MCMC_weighted_weak *
-#Rem_covid_MCMC_weighted_betareg_weak 
-#Rem_911_MCMC_T2_weighted_betareg_weak *
-#Time_avg_911_MCMC_weighted_weak *
-#Rem_911_MCMC_weighted_weak *
-#covid_PCA_MCMC_weak (No need)
-
-
-#### Save ####
-save_(MemType_covid_MCMC_VeryWeak, MemType_covid_MCMC_Weak, MemType_911_MCMC_T2_VeryWeak, MemType_911_MCMC_T2_Weak, Dataset_Percent_MCMC_VeryWeak, 
-     Dataset_Percent_MCMC_Weak, Dataset_Delta_baseline_MCMC_betareg_VeryWeak, Dataset_Delta_baseline_MCMC_betareg_Weak, Rem_covid_MCMC_weighted_veryweak, 
-     Rem_covid_MCMC_weighted_weak, Rem_covid_MCMC_weighted_betareg_veryweak, Rem_covid_MCMC_weighted_betareg_weak, Rem_911_MCMC_T2_weighted_betareg_veryweak, 
-     Rem_911_MCMC_T2_weighted_betareg_weak, Time_avg_911_MCMC_weighted_veryweak, Time_avg_911_MCMC_weighted_weak, StressOTEmo911_MCMC_veryweak, 
-     StressOTEmo911_MCMC_weak, Rem_911_MCMC_weighted_veryweak, Rem_911_MCMC_weighted_weak, covid_PCA_MCMC_veryweak, covid_PCA_MCMC_weak, 
-     covid_delta_EmoWell_MCMC_both_veryweak, covid_delta_EmoWell_MCMC_both_weak, covid_delta_EmoWell_MCMC_both_betareg_veryweak, covid_delta_EmoWell_MCMC_both_betareg_weak, 
-     file = "/Users/juc418/Desktop/911nCovid_StressMemory_PS.rda")
-
-save(MemType_covid_MCMC_standardBF, MemType_covid_MCMC_VeryWeakBF, MemType_covid_MCMC_WeakBF, 
-     MemType_911_MCMC_T2_standardBF, MemType_911_MCMC_T2_VeryWeakBF, MemType_911_MCMC_T2_WeakBF, 
-     Dataset_Percent_MCMC_standardBF, Dataset_Percent_MCMC_VeryWeakBF, Dataset_Percent_MCMC_WeakBF, 
-     Dataset_Delta_baseline_MCMC_betareg_standardBF, Dataset_Delta_baseline_MCMC_betareg_VeryWeakBF, 
-     Dataset_Delta_baseline_MCMC_betareg_WeakBF, Rem_covid_MCMC_weighted_standardBF, Rem_covid_MCMC_weighted_veryweakBF, 
-     Rem_covid_MCMC_weighted_weakBF, Rem_covid_MCMC_weighted_betareg_standardBF, Rem_covid_MCMC_weighted_betareg_veryweakBF, 
-     Rem_covid_MCMC_weighted_betareg_weakBF, Rem_911_MCMC_T2_weighted_betareg_standardBF, Rem_911_MCMC_T2_weighted_betareg_veryweakBF, 
-     Rem_911_MCMC_T2_weighted_betareg_weakBF, Time_avg_911_MCMC_weighted_standardBF, Time_avg_911_MCMC_weighted_veryweakBF, 
-     Time_avg_911_MCMC_weighted_weakBF, Rem_911_MCMC_weighted_standardBF, Rem_911_MCMC_weighted_veryweakBF, Rem_911_MCMC_weighted_weakBF, 
-     covid_PCA_MCMC_standardBF, covid_PCA_MCMC_veryweakBF, covid_PCA_MCMC_weakBF, covid_delta_EmoWell_MCMC_both_standardBF, 
-     covid_delta_EmoWell_MCMC_both_veryweakBF, covid_delta_EmoWell_MCMC_both_weakBF, covid_delta_EmoWell_MCMC_both_betareg_standardBF, 
-     covid_delta_EmoWell_MCMC_both_betareg_veryweakBF, covid_delta_EmoWell_MCMC_both_betareg_veryweakBF,
-     file = "/Users/jcast/Desktop/G2/Covid_Proj/911nCovid_StressMemory_PSBF.rda")

@@ -22,7 +22,6 @@ source('utils.R')
 # if you wish to load in the saved RData file, uncomment the line below
 #load(file = '../data/BayesRegObj.RData')
 covid_wide <-  read.csv('../data/Complete_test_Dev_Exp_Only_Data_Manipulation.csv') #each row is one observation, T1 and T2 separated by prefix in the column
-nine11_wide_avg <- read.csv('../data/df.emo.wide.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
 nine11_long_avg <- read.csv('../data/df.emo.long.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
 
 #  filter time2 data frome 911 to do shared analysis 
@@ -135,7 +134,7 @@ In this analysis, we aim to compare whether people's degree of deviance differ b
 
 Because the range of response differs between two dataset, we use Deviance (transformed into Beta) as DV and use the data type and T1_experienced to predict it. 
 
-A quick note that the reason that we moved away from percent is because that the contonation of a ratio is that the same magnitude of change means differently when the baseline is different. However, this is not what we mean here. Therefore, we decide to focus on the raw deviance score while controlling for baseline by including T1_experienced on the right hand side. 
+A quick note that the reason that we moved away from percent is because that the meaning of a ratio is that the same magnitude of change means differently when the baseline is different. However, this is not what we mean here. Therefore, we decide to focus on the raw deviance score while controlling for baseline by including T1_experienced on the right hand side. We apologzie for the potential confusion caused by the fact that we still call the dataset covid_percent.. but our actual DV is the deviance score, not the percent.
 
 Another quick note for the model specification: there is no random effect because each subject either contribute to the covid or the 9/11 dataset, but not both
 
@@ -309,7 +308,7 @@ describe_posterior(covid_PCA_MCMC)
 # controlled analysis: adding Covid_Exp1 as covariate
 covid_percent <- covid_wide %>% 
   mutate(BCovid_Dev = beta_squeeze((Covid_Dev+4)/8)) %>% 
-  mutate(Percent = Covid_Dev / twovar_Covid_Exp1) %>% filter(!is.na(Percent)) %>% 
+  #mutate(Percent = Covid_Dev / twovar_Covid_Exp1) %>% filter(!is.na(Percent)) %>% 
   filter(!is.na(BCovid_Dev)) %>% filter(!is.na(emo_well_being_delta))
 # A couple of regressions were run: 
 # - covid_delta_EmoWell_MCMC: Dev ~ Emo_well_being + prev_experience

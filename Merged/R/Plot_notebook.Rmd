@@ -20,12 +20,46 @@ source('utils.R')
 # here we need to use one of the regression object to generate predictions. 
 # if you wish to load in the saved RData file, uncomment the line below
 load(file = '../data/BayesRegObj.RData')
+load(file= '../data/BayesRegObj_911Extra.RData')
 
 # read in data
-covid_wide <-  read.csv('../data/Complete_test_Dev_Exp_Only_Data_Manipulation.csv') #each row is one observation, T1 and T2 separated by prefix in the colnmae
-nine11_wide_avg <- read.csv('../data/df.emo.wide.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
-nine11_wide <- read.csv('../data/df.emo.wide_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is specific to one emotion
-nine11_long_avg <- read.csv('../data/df.emo.long.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
+covid_wide <-  read.csv('../data/Complete_test_Dev_Exp_Only_Data_Manipulation.csv') %>% #each row is one observation, T1 and T2 separated by prefix in the column
+      mutate(T1_Demographics_race_category = case_when(T1_Demographics_race == 'White/Caucasian' ~ 'White',
+                                                   T1_Demographics_race == 'Black/African American' ~ 'Black',
+                                                   T1_Demographics_race == 'Asian' ~ 'Asian',
+                                                   is.na(T1_Demographics_race) ~ 'Other',
+                                                   TRUE ~ 'Mixed'))
+
+df.emo.demo <- read.csv('../data/df.911.demo.csv')
+
+nine11_long_avg <- read.csv('../data/df.emo.long.avg_Only_Data_Manipulation.csv') #each row is one observation at one time 
+nine11_long_avg.demo <- nine11_long_avg %>% filter(!is.na(memdev) & !is.na(prev_experience)) %>% left_join(df.emo.demo) %>% group_by(Subject) %>% slice(1)
+
+nine11_wide_avg <- read.csv('../data/df.emo.wide.avg_Only_Data_Manipulation.csv') %>% #each row is one observation at one time point, stress_memory is avg across emotions
+  left_join(nine11_long_avg.demo %>% dplyr::select(Subject, age, gender, race_1, origin_1)) %>% 
+  rename(race=race_1, origin=origin_1) %>% mutate(race_category = case_when(race == 'White' ~ 'White',
+                                                                          race == 'Black' ~ 'Black',
+                                                                          race == 'Asian' | race == 'East Indian' ~ 'Asian',
+                                                                          TRUE ~ 'Other Or NA'),
+                                                  eth_category = case_when(race == 'Hispanic' ~ 'Hispanic', TRUE ~ 'Other Or NA'))
+
+nine11_long_avg.demo <- nine11_long_avg %>% filter(!is.na(memdev) & !is.na(prev_experience)) %>% left_join(df.emo.demo) %>% group_by(Subject) %>% slice(1)
+
+nine11_wide <- read.csv('../data/df.emo.wide_Only_Data_Manipulation.csv') %>% #each row is one observation at one time point, stress_memory is specific to one emotion
+  left_join(nine11_long_avg.demo %>% dplyr::select(Subject, age, gender, race_1, origin_1)) %>% 
+  rename(race=race_1, origin=origin_1) %>% mutate(race_category = case_when(race == 'White' ~ 'White',
+                                                                          race == 'Black' ~ 'Black',
+                                                                          race == 'Asian' | race == 'East Indian' ~ 'Asian',
+                                                                          TRUE ~ 'Other Or NA'),
+                                                  eth_category = case_when(race == 'Hispanic' ~ 'Hispanic', TRUE ~ 'Other Or NA'))
+
+nine11_long_avg <- read.csv('../data/df.emo.long.avg_Only_Data_Manipulation.csv') %>% #each row is one observation at one time point, stress_memory is avg across emotions
+  left_join(nine11_long_avg.demo %>% dplyr::select(Subject, age, gender, race_1, origin_1)) %>% 
+  rename(race=race_1, origin=origin_1) %>% mutate(race_category = case_when(race == 'White' ~ 'White',
+                                                                          race == 'Black' ~ 'Black',
+                                                                          race == 'Asian' | race == 'East Indian' ~ 'Asian',
+                                                                          TRUE ~ 'Other Or NA'),
+                                                  eth_category = case_when(race == 'Hispanic' ~ 'Hispanic', TRUE ~ 'Other Or NA'))
 
 #  filter time2 data frome 911 to do shared analysis 
 nine11_long_avg_T2 <- nine11_long_avg %>% filter(time==2)
@@ -84,6 +118,7 @@ loading.prev_pca %>% merge(loading_header.prev_pca, by = c('Scale','Index')) %>%
   write.csv('../Output/csv/Supp_PCA_loading.csv')
 
 ```
+
 # Supplementary Table 11 Correlation between subjective well-being score and psychological scales
 ```{r correlate with subscale}
 covid_wide <- covid_wide %>% 
@@ -129,18 +164,17 @@ covid_long_type_plot <- covid_wide %>% mutate(BCovid_Exp1 = beta_squeeze((Covid_
                names_to = 'MemType', values_to = 'Stress') %>% 
   mutate(MemType = factor(MemType, levels = c('Covid_Exp1','Covid_Exp2','Covid_Rem'),
                           labels = c('Previous ', 'Current ', 'Remembered'))) %>% 
-  filter(!is.na(Stress)) 
-  
+  filter(!is.na(Stress))
 
 fig1A <- covid_long_type_plot %>% ggplot(aes(x = MemType, y = Stress)) + 
   stat_summary(size=1.7) 
 
 fig1A + emomem_theme + 
-  ylab('Average Stress') +
+  ylab('Intensity of Negative Feelings') +
   xlab('') 
-ggsave('../Output/fig/pdf/fig_stress_compare.pdf',height=6,width=7)
-ggsave('../Output/fig/png/fig_stress_compare.png',height=6,width=7)
-  
+ggsave('../Output/fig/pdf/fig_stress_compare_new_ylab.pdf',height=6,width=7)
+ggsave('../Output/fig/png/fig_stress_compare_new_ylab.png',height=6,width=7)
+
  # Fig 1B
 nine11_long_type <- nine11_long_avg_T2 %>% 
   mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
@@ -164,18 +198,16 @@ nine11_long_type_plot <- nine11_long_avg_T2 %>%
 fig1B <- nine11_long_type_plot %>% ggplot(aes(x = MemType, y = NegEmo)) + 
   stat_summary(size=1.2)
 fig1B + emomem_theme + 
-  ylab('Average Negative Emotion Intensity') +
+  ylab('Intensity of Negative Feelings') +
   xlab('') 
-ggsave('../Output/fig/pdf/fig_negemo_compare.pdf',height=6,width=7)
-ggsave('../Output/fig/png/fig_negemo_compare.png',height=6,width=7)
+ggsave('../Output/fig/pdf/fig_negemo_compare_new_ylab.pdf',height=6,width=7)
+ggsave('../Output/fig/png/fig_negemo_compare_new_ylab.png',height=6,width=7)
   
-
-# Fig 1C
-# not quite sure how to deal with this...
 ```
 
 
-
+# Figure 2
+## Figure 2A, 2C
 ```{r Fig 2}
 # Fig 2A
 
@@ -205,16 +237,19 @@ p_Rem_covid_MCMC_weighted <- df_Rem_covid_MCMC_weighted %>% ggplot(aes_string(x 
   
 
 p_Rem_covid_MCMC_weighted + 
-  ylab('Remembered Negative Feelings') +
+  ylab('Remembered Intensity of \nNegative Feelings') +
   ylim(1,5)+
-  xlab('Experienced Negative Feelings') +
+  xlab('Experienced Intensity of \nNegative Feelings') +
   scale_color_manual(labels = c('Previous','Current (after 1 year)'), values = palette2var)+
   scale_fill_manual(values = palette2var)+
   labs(colour='') + 
-  emomem_theme
+  emomem_theme +
+  theme(axis.title =element_text(size=24),
+        legend.box.margin=margin(-10,-10,0,-10),
+        legend.text = element_text(size = 18))
 
-ggsave('../Output/fig/pdf/fig_recency_covid_new.pdf',height=6,width=6)
-ggsave('../Output/fig/png/fig_recency_covid_new.png',height=6,width=6)
+ggsave('../Output/fig/pdf/fig_recency_covid_new_ylab.pdf',height=6,width=6)
+ggsave('../Output/fig/png/fig_recency_covid_new_ylab.png',height=6,width=6)
 
 # Fig 2C
 nine11_BRem_T2 <- nine11_long_avg_T2 %>% mutate(B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
@@ -240,18 +275,22 @@ p_Rem_911_MCMC_T2_weighted <- df_Rem_911_MCMC_T2_weighted %>% ggplot(aes_string(
                 show.legend = FALSE)
 
 p_Rem_911_MCMC_T2_weighted + 
-  ylab('Remembered Negative Feelings') +
+  ylab('Remembered Intensity of \nNegative Feelings') +
   ylim(1,5)+
-  xlab('Experienced Negative Feelings') +
+  xlab('Experienced Intensity of \nNegative Feelings') +
   scale_color_manual(labels = c('Previous','Current (after 1 year)'), values = palette2var)+
   scale_fill_manual(values = palette2var)+
   labs(colour='') +
-  emomem_theme
-ggsave('../Output/fig/pdf/fig_recency_911_T2_new.pdf',height=6,width=6)
-ggsave('../Output/fig/png/fig_recency_911_T2_new.png',height=6,width=6)
+  emomem_theme + 
+  theme(axis.title =element_text(size=24),
+        legend.box.margin=margin(-10,-10,0,-10),
+        legend.text = element_text(size = 18))
+ggsave('../Output/fig/pdf/fig_recency_911_T2_new_ylab.pdf',height=6,width=6)
+ggsave('../Output/fig/png/fig_recency_911_T2_new_ylab.png',height=6,width=6)
 
 ```
 
+## Figure 2B, 2D
 ```{r mcmc interval}
 # Fig 2B and 2D
 p_coef_covid_weighted <- mcmc_intervals(as.array(Rem_covid_MCMC_weighted), pars = c('Covid_Exp1','Covid_Exp2'),
@@ -268,7 +307,7 @@ p_coef_911_weighted_T2_area <- mcmc_areas(as.array(Rem_911_MCMC_T2_weighted), pa
 p_coef_covid_weighted_area + emomem_theme + 
   xlab('Coefficient Estimate') +
   scale_y_discrete(breaks = c('Covid_Exp1','Covid_Exp2'),
-                   labels = c('Previous','Current\n(after 1 year)'))
+                   labels = c('Previous','Current\n(after 1 year)')) 
 ggsave('../Output/fig/pdf/fig_recency_coef_covid_area.pdf',height=6,width=6)
 ggsave('../Output/fig/png/fig_recency_coef_covid_area.png',height=6,width=6)
   
@@ -280,7 +319,7 @@ ggsave('../Output/fig/pdf/fig_recency_coef_911_area.pdf',height=6,width=6)
 ggsave('../Output/fig/png/fig_recency_coef_911_area.png',height=6,width=6)
 
 ```
-
+# Supplementary Figure 2
 ```{r}
 
 covid_long_pca <- covid_wide %>% mutate(neg_PCA_T1 = -PCA_T1, neg_PCA_T2 = -PCA_T2) %>%
@@ -301,8 +340,7 @@ ggsave('../Output/fig/png/supp_pca.png',height=6,width=7)
 
 ```
 
-
-
+# Figure 4
 ```{r well-being}
 covid_percent <- covid_wide %>% 
   mutate(BCovid_Dev = beta_squeeze((Covid_Dev+4)/8)) %>% 
@@ -342,6 +380,7 @@ ggsave('../Output/fig/png/delta_wellbeing.png',height=6,width=6)
 
 ```
 
+# Figure 3
 ```{r fig3}
 # Fig 3
 nine11_percent <- nine11_long_avg %>% 
@@ -367,6 +406,543 @@ ggsave('../Output/fig/pdf/avg_911_time.pdf',height=6,width=6)
 ggsave('../Output/fig/png/avg_911_time.png',height=6,width=6)
 
 ```
+
+# Supplementary Figure (covariate)
+
+## Stress (NegEmo) ~ type (T1_experienced/T2_remembered/T2_experienced)
+### Covid
+#### Covariate - data viz
+
+```{r}
+
+fig1A_gender <- covid_long_type_plot %>% filter(T1_Demographics_gender == 'Male' | T1_Demographics_gender == 'Female') %>% 
+  ggplot(aes(x = MemType, y = Stress, group = T1_Demographics_gender)) + 
+  stat_summary(size=1.7) +
+  facet_wrap(~T1_Demographics_gender)
+fig1A_gender + emomem_theme + 
+  ylab('Intensity of Negative Feelings') +
+  xlab('') +
+  scale_color_discrete(name='')
+ggsave('../Output/fig/pdf/fig1A_gender.pdf',height=6,width=12)
+ggsave('../Output/fig/png/fig1A_gender.png',height=6,width=12)
+
+fig1A_race <- covid_long_type_plot %>% filter(T1_Demographics_race_category != 'Other' & T1_Demographics_race_category != 'Mixed') %>% 
+  ggplot(aes(x = MemType, y = Stress, group = T1_Demographics_race_category)) + 
+  stat_summary(size=1.7) + facet_wrap(~T1_Demographics_race_category)
+fig1A_race + emomem_theme + 
+  ylab('Intensity of Negative Feelings') +
+  xlab('') +
+  scale_color_discrete(name='') 
+ggsave('../Output/fig/pdf/fig1A_race.pdf',height=6,width=18)
+ggsave('../Output/fig/png/fig1A_race.png',height=6,width=18)
+
+fig1A_eth <- covid_long_type_plot %>% 
+  mutate(T1_Demographics_HispanicLatino = 
+           factor(T1_Demographics_HispanicLatino, levels=c(0,1), labels=c('non-Hispanic','Hispanic'))) %>%
+  filter(!is.na(T1_Demographics_HispanicLatino)) %>% 
+  ggplot(aes(x = MemType, y = Stress, group = T1_Demographics_HispanicLatino)) + 
+  stat_summary(size=1.7) + 
+  facet_wrap(~T1_Demographics_HispanicLatino)
+fig1A_eth + emomem_theme + 
+  ylab('Intensity of Negative Feelings') +
+  xlab('') +
+  scale_color_discrete(name='') # huge error bar for Hispanic!
+ggsave('../Output/fig/pdf/fig1A_eth.pdf',height=6,width=12)
+ggsave('../Output/fig/png/fig1A_eth.png',height=6,width=12)
+```
+
+#### Covariate - model viz 
+```{r}
+fig1A_gender_contrast <- MemType_covid_MCMC_covariate_gender %>% emmeans(specs = 'MemType', by = 'T1_Demographics_gender') %>% contrast('trt.vs.ctrl') 
+plot(fig1A_gender_contrast) + facet_wrap(~T1_Demographics_gender, ncol = 2) + scale_y_discrete(labels=c('Current -\nPrevious','Remembered -\nPrevious'))  + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme + coord_flip() + 
+  ylab('Contrast') + xlab('Estimate')
+
+ggsave('../Output/fig/pdf/fig1A_gender_contrast.pdf',height=6,width=12)
+ggsave('../Output/fig/png/fig1A_gender_contrast.png',height=6,width=12)
+
+fig1A_race_contrast <- MemType_covid_MCMC_covariate_race %>% emmeans(specs = 'MemType', by = 'T1_Demographics_race_category') %>% contrast('trt.vs.ctrl') 
+plot(fig1A_race_contrast[c(1:4 ,9:10)]) + facet_wrap(~T1_Demographics_race_category, scales='free_x', nrow = 1) + scale_y_discrete(labels=c('Current -\nPrevious','Remembered -\nPrevious')) + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme +  coord_flip() + 
+  ylab('Contrast') + xlab('Estimate')
+
+ggsave('../Output/fig/pdf/fig1A_race_contrast.pdf',height=6,width=18)
+ggsave('../Output/fig/png/fig1A_race_contrast.png',height=6,width=18)
+
+supp.labs <- c("Non-Hispanic", "Hispanic")
+names(supp.labs) <- c("0", "1")
+
+fig1A_eth_contrast <- MemType_covid_MCMC_covariate_eth %>% emmeans(specs = 'MemType', by = 'T1_Demographics_HispanicLatino') %>% contrast('trt.vs.ctrl') 
+plot(fig1A_eth_contrast) + facet_wrap(~T1_Demographics_HispanicLatino, nrow = 1, labeller = labeller(T1_Demographics_HispanicLatino=supp.labs)) + scale_y_discrete(labels=c('Current -\nPrevious','Remembered -\nPrevious'))  + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme +  coord_flip() + 
+  ylab('Contrast') + xlab('Estimate')
+ggsave('../Output/fig/pdf/fig1A_eth_contrast.pdf',height=6,width=12)
+ggsave('../Output/fig/png/fig1A_eth_contrast.png',height=6,width=12)
+
+
+```
+
+### 911
+#### Covariate - data viz
+```{r}
+fig1B_gender <- nine11_long_type_plot %>% filter(gender == 'Male' | gender == 'Female') %>% 
+  ggplot(aes(x = MemType, y = NegEmo, group = gender)) + 
+  stat_summary(size=1.7) +
+  facet_wrap(~gender)
+fig1B_gender + emomem_theme + 
+  ylab('Intensity of Negative Feelings') +
+  xlab('') +
+  scale_color_discrete(name='')
+ggsave('../Output/fig/pdf/fig1B_gender.pdf',height=6,width=12)
+ggsave('../Output/fig/png/fig1B_gender.png',height=6,width=12)
+
+fig1B_race <- nine11_long_type_plot %>% filter(race_category == 'Asian' | race_category == 'Black' | race_category == 'White') %>% 
+  ggplot(aes(x = MemType, y = NegEmo, group = race_category)) + 
+  stat_summary(size=1.7) +
+  facet_wrap(~race_category, nrow=1)
+fig1B_race + emomem_theme + 
+  ylab('Intensity of Negative Feelings') +
+  xlab('') +
+  scale_color_discrete(name='')
+ggsave('../Output/fig/pdf/fig1B_race.pdf',height=6,width=18)
+ggsave('../Output/fig/png/fig1B_race.png',height=6,width=18)
+
+fig1B_eth <- nine11_long_type_plot %>% 
+  mutate(eth_category = 
+           factor(eth_category, levels=c('Other Or NA','Hispanic'), labels=c('non-Hispanic','Hispanic'))) %>% 
+  ggplot(aes(x = MemType, y = NegEmo, group = eth_category)) + 
+  stat_summary(size=1.7) +
+  facet_wrap(~eth_category)
+fig1B_eth + emomem_theme + 
+  ylab('Intensity of Negative Feelings') +
+  xlab('') +
+  scale_color_discrete(name='')
+ggsave('../Output/fig/pdf/fig1B_eth.pdf',height=6,width=12)
+ggsave('../Output/fig/png/fig1B_eth.png',height=6,width=12)
+
+```
+
+#### Covariate - model viz
+```{r}
+fig1B_gender_contrast <- MemType_911_MCMC_T2_gender %>% emmeans(specs = 'MemType', by = 'gender') %>% contrast('trt.vs.ctrl') 
+plot(fig1B_gender_contrast[1:4]) + facet_wrap(~gender, scales='free_x',nrow = 1) + scale_y_discrete(labels=c('Current -\nPrevious','Remembered -\nPrevious'))  + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme + coord_flip() + xlab('Estimate') + ylab('Contrast')
+ggsave('../Output/fig/pdf/fig1B_gender_contrast.pdf',height=6,width=12)
+ggsave('../Output/fig/png/fig1B_gender_contrast.png',height=6,width=12)
+
+fig1B_race_contrast <- MemType_911_MCMC_T2_race %>% emmeans(specs = 'MemType', by = 'race_category') %>% contrast('trt.vs.ctrl') 
+plot(fig1B_race_contrast[c(1:4,7:8)]) + facet_wrap(~race_category, scales='free_x', nrow = 1) + scale_y_discrete(labels=c('Current -\nPrevious','Remembered -\nPrevious')) + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme  + coord_flip() + xlab('Estimate') + ylab('Contrast')
+ggsave('../Output/fig/pdf/fig1B_race_contrast.pdf',height=6,width=18)
+ggsave('../Output/fig/png/fig1B_race_contrast.png',height=6,width=18)
+
+supp.labs <- c("Hispanic", "Non-Hispanic")
+names(supp.labs) <- c("Hispanic", "Other Or NA")
+
+fig1B_eth_contrast <- MemType_911_MCMC_T2_eth %>% emmeans(specs = 'MemType', by = 'eth_category') %>% contrast('trt.vs.ctrl') 
+plot(fig1B_eth_contrast) + facet_wrap(~eth_category, nrow = 1, labeller = labeller(eth_category=supp.labs)) + scale_y_discrete(labels=c('Current -\nPrevious','Remembered -\nPrevious'))  + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme + coord_flip() + xlab('Estimate') + ylab('Contrast')
+ggsave('../Output/fig/pdf/fig1B_eth_contrast.pdf',height=6,width=12)
+ggsave('../Output/fig/png/fig1B_eth_contrast.png',height=6,width=12)
+
+
+
+```
+#### Separate emotion - data viz
+```{r}
+fig1B_discrete <- nine11_wide_type %>% 
+  ggplot(aes(x = MemType, y = stress_memory)) + 
+  stat_summary(size=1, aes(group=item, color=item)) 
+fig1B_discrete + emomem_theme + 
+  ylab('Intensity of Negative Feelings') +
+  xlab('') +
+  scale_x_discrete(labels=c('Previous','Current','Remembered'))+
+  scale_color_discrete(name='')+
+  theme(legend.position = 'right')
+ggsave('../Output/fig/pdf/fig1B_discrete.pdf',height=6,width=9)
+ggsave('../Output/fig/png/fig1B_discrete.png',height=6,width=9)
+```
+
+#### Separate emotion - model viz
+```{r}
+
+fig1B_discrete_contrast <- MemType_911_MCMC_T2_discrete %>% emmeans(specs = 'MemType', by = 'item') %>% contrast('trt.vs.ctrl') 
+plot(fig1B_discrete_contrast) + facet_wrap(~item, scales='free_x',nrow = 2) + scale_y_discrete(labels=c('Current -\nPrevious','Remembered -\nPrevious'))  + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme + xlab('Estimate') + ylab('Contrast') + coord_flip()
+ggsave('../Output/fig/pdf/fig1B_discrete_contrast.pdf',height=12,width= 18)
+ggsave('../Output/fig/png/fig1B_discrete_contrast.png',height=12, width=18)
+
+```
+
+## Rem ~ Exp1 + Exp2
+### Covid
+#### Covariate - data viz
+```{r}
+fig2a_gender <- ggplot(data = covid_wide %>% filter(T1_Demographics_gender != 'Other'), aes(y=Covid_Rem)) + 
+  geom_smooth(aes(x = Covid_Exp1), formula = 'y~x', method='lm', color='black', alpha=0.3) +
+  geom_smooth(aes(x = Covid_Exp2), formula = 'y~x', method='lm', color='darkgrey', alpha=0.3) +  facet_wrap(~T1_Demographics_gender)+
+  xlab('Experienced Intensity of Negative Feelings')+
+  ylab('Remembered Intensity of\nNegative Feelings')+
+  emomem_theme 
+ggsave('../Output/fig/pdf/fig2a_gender.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig2a_gender.png',height=6, width=12)
+
+fig2a_race <- ggplot(data = covid_wide %>% filter(T1_Demographics_race_category != 'Mixed' & T1_Demographics_race_category != 'Other' ), aes(y=Covid_Rem)) + 
+  geom_smooth(aes(x = Covid_Exp1), formula = 'y~x', method='lm', color='black', alpha=0.3) +
+  geom_smooth(aes(x = Covid_Exp2), formula = 'y~x', method='lm', color='darkgrey', alpha=0.3) +  facet_wrap(~T1_Demographics_race_category)+
+  xlab('Experienced Intensity of Negative Feelings')+
+  ylab('Remembered Intensity of\nNegative Feelings')+
+  emomem_theme
+ggsave('../Output/fig/pdf/fig2a_race.pdf',height=6,width= 18)
+ggsave('../Output/fig/png/fig2a_race.png',height=6, width=18)
+
+
+fig2a_eth <- ggplot(data = covid_wide %>% filter(!is.na(T1_Demographics_HispanicLatino)) %>% 
+         mutate(T1_Demographics_HispanicLatino = ifelse(T1_Demographics_HispanicLatino==0, 'non-Hispanic','Hispanic')) , aes(y=Covid_Rem)) + 
+  geom_smooth(aes(x = Covid_Exp1), formula = 'y~x', method='lm', color='black', alpha=0.3) +
+  geom_smooth(aes(x = Covid_Exp2), formula = 'y~x', method='lm', color='darkgrey', alpha=0.3) +  facet_wrap(~T1_Demographics_HispanicLatino)+
+  xlab('Experienced Intensity of Negative Feelings')+
+  ylab('Remembered Intensity of\nNegative Feelings')+
+  emomem_theme
+ggsave('../Output/fig/pdf/fig2a_eth.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig2a_eth.png',height=6, width=12)
+
+```
+
+#### Covariate - model viz
+```{r}
+fig2b_gender_contrast <- Rem_covid_MCMC_weighted_gender %>% emtrends(specs = 'T1_Demographics_gender', var = 'Covid_Exp2') %>% as.data.frame %>% mutate(type='Covid_Exp2') %>% rename(trend=Covid_Exp2.trend) %>% 
+  rbind(Rem_covid_MCMC_weighted_gender %>% emtrends(specs = 'T1_Demographics_gender', var = 'Covid_Exp1') %>% as.data.frame %>% mutate(type='Covid_Exp1') %>% rename(trend=Covid_Exp1.trend))
+
+fig2b_gender_contrast %>% filter(T1_Demographics_gender != 'Other') %>% ggplot(aes(y=type, x=trend)) + 
+  geom_point() +
+  geom_errorbarh(aes(xmin=lower.HPD, xmax=upper.HPD), linewidth=3, color='blue', alpha=0.2, height=0) + 
+  xlab('Coefficient Estimate')+
+  scale_y_discrete(name='',labels=c('Previous','Current\n(after 1 year)'))+
+  facet_wrap(~T1_Demographics_gender) + emomem_theme + coord_flip()
+ggsave('../Output/fig/pdf/fig2a_gender_contrast.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig2a_gender_contrast.png',height=6, width=12)
+
+fig2b_race_contrast <- Rem_covid_MCMC_weighted_race %>% emtrends(specs = 'T1_Demographics_race_category', var = 'Covid_Exp2') %>% as.data.frame %>% mutate(type='Covid_Exp2') %>% rename(trend=Covid_Exp2.trend) %>% 
+  rbind(Rem_covid_MCMC_weighted_race %>% emtrends(specs = 'T1_Demographics_race_category', var = 'Covid_Exp1') %>% as.data.frame %>% mutate(type='Covid_Exp1') %>% rename(trend=Covid_Exp1.trend))
+
+fig2b_race_contrast %>% filter(T1_Demographics_race_category != 'Other' & T1_Demographics_race_category != 'Mixed') %>% ggplot(aes(y=type, x=trend)) + 
+  geom_point() +
+  geom_errorbarh(aes(xmin=lower.HPD, xmax=upper.HPD), linewidth=3, color='blue', alpha=0.2, height=0) + 
+  xlab('Coefficient Estimate')+
+  scale_y_discrete(name='',labels=c('Previous','Current\n(after 1 year)'))+
+  facet_wrap(~T1_Demographics_race_category) + emomem_theme + coord_flip()
+ggsave('../Output/fig/pdf/fig2a_race_contrast.pdf',height=6,width= 18)
+ggsave('../Output/fig/png/fig2a_race_contrast.png',height=6, width=18)
+
+fig2b_eth_contrast <- Rem_covid_MCMC_weighted_eth %>% emtrends(specs = 'T1_Demographics_HispanicLatino', var = 'Covid_Exp2') %>% as.data.frame %>% mutate(type='Covid_Exp2') %>% rename(trend=Covid_Exp2.trend) %>% 
+  rbind(Rem_covid_MCMC_weighted_eth %>% emtrends(specs = 'T1_Demographics_HispanicLatino', var = 'Covid_Exp1') %>% as.data.frame %>% mutate(type='Covid_Exp1') %>% rename(trend=Covid_Exp1.trend))
+
+fig2b_eth_contrast %>% mutate(T1_Demographics_HispanicLatino = ifelse(T1_Demographics_HispanicLatino==0, 'non-Hispanic','Hispanic')) %>% ggplot(aes(y=type, x=trend)) + 
+  geom_point() +
+  geom_errorbarh(aes(xmin=lower.HPD, xmax=upper.HPD), linewidth=3, color='blue', alpha=0.2, height=0) + 
+  xlab('Coefficient Estimate')+
+  scale_y_discrete(name='',labels=c('Previous','Current\n(after 1 year)'))+
+  facet_wrap(~T1_Demographics_HispanicLatino) + emomem_theme + coord_flip()
+ggsave('../Output/fig/pdf/fig2a_eth_contrast.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig2a_eth_contrast.png',height=6, width=12)
+ 
+```
+
+
+### 9/11
+#### Covariate - data viz
+```{r}
+fig2c_gender <- ggplot(data = nine11_BRem_T2 %>% filter(gender != 'Not stated'), aes(y=stress_memory)) + 
+  geom_smooth(aes(x = prev_experience), formula = 'y~x', method='lm', color='black', alpha=0.3) +
+  geom_smooth(aes(x = curr_experience), formula = 'y~x', method='lm', color='darkgrey', alpha=0.3) +  facet_wrap(~gender)+
+  xlab('Experienced Intensity of Negative Feelings')+
+  ylab('Remembered Intensity of\nNegative Feelings')+
+  emomem_theme
+ggsave('../Output/fig/pdf/fig2c_gender.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig2c_gender.png',height=6, width=12)
+
+
+fig2c_race <- ggplot(data = nine11_BRem_T2 %>% filter(race_category != 'Other Or NA'), aes(y=stress_memory)) + 
+  geom_smooth(aes(x = prev_experience), formula = 'y~x', method='lm', color='black', alpha=0.3) +
+  geom_smooth(aes(x = curr_experience), formula = 'y~x', method='lm', color='darkgrey', alpha=0.3) +  facet_wrap(~race_category)+
+  xlab('Experienced Intensity of Negative Feelings')+
+  ylab('Remembered Intensity of\nNegative Feelings')+
+  emomem_theme
+ggsave('../Output/fig/pdf/fig2c_race.pdf',height=6,width= 18)
+ggsave('../Output/fig/png/fig2c_race.png',height=6, width=18)
+
+fig2c_eth <- ggplot(data = nine11_BRem_T2 %>% mutate(eth_category = ifelse(eth_category=='Other Or NA','Non-Hispanic','Hispanic')), aes(y=stress_memory)) + 
+  geom_smooth(aes(x = prev_experience), formula = 'y~x', method='lm', color='black', alpha=0.3) +
+  geom_smooth(aes(x = curr_experience), formula = 'y~x', method='lm', color='darkgrey', alpha=0.3) +  facet_wrap(~eth_category)+
+  xlab('Experienced Intensity of Negative Feelings')+
+  ylab('Remembered Intensity of\nNegative Feelings')+
+  emomem_theme
+ggsave('../Output/fig/pdf/fig2c_eth.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig2c_eth.png',height=6, width=12)
+
+```
+
+#### Covariate - model viz
+```{r}
+fig2d_gender_contrast <- Rem_911_MCMC_T2_weighted_gender %>% emtrends(specs = 'gender', var = 'curr_experience') %>% as.data.frame %>% mutate(type='curr_experience') %>% rename(trend=curr_experience.trend) %>% 
+  rbind(Rem_911_MCMC_T2_weighted_gender %>% emtrends(specs = 'gender', var = 'prev_experience') %>% as.data.frame %>% mutate(type='prev_experience') %>% rename(trend=prev_experience.trend))
+
+fig2d_gender_contrast %>% filter(gender != 'Not stated') %>% ggplot(aes(y=type, x=trend)) + 
+  #geom_ribbonh(aes(xmin=lower.HPD, xmax=upper.HPD), color='blue') + 
+  geom_point() +
+  geom_errorbarh(aes(xmin=lower.HPD, xmax=upper.HPD), linewidth=3, color='blue', alpha=0.2, height=0) + 
+  xlab('Coefficient Estimate')+
+  scale_y_discrete(name='',labels=c('Previous','Current\n(after 1 year)'))+
+  facet_wrap(~gender) + emomem_theme + coord_flip() 
+ggsave('../Output/fig/pdf/fig2c_gender_contrast.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig2c_gender_contrast.png',height=6, width=12)
+
+fig2d_race_contrast <- Rem_911_MCMC_T2_weighted_race %>% emtrends(specs = 'race_category', var = 'curr_experience') %>% as.data.frame %>% mutate(type='curr_experience') %>% rename(trend=curr_experience.trend) %>% 
+  rbind(Rem_911_MCMC_T2_weighted_race %>% emtrends(specs = 'race_category', var = 'prev_experience') %>% as.data.frame %>% mutate(type='prev_experience') %>% rename(trend=prev_experience.trend))
+
+fig2d_race_contrast %>% filter(race_category != 'Other Or NA') %>% ggplot(aes(y=type, x=trend)) + 
+  geom_point() +
+  geom_errorbarh(aes(xmin=lower.HPD, xmax=upper.HPD), linewidth=3, color='blue', alpha=0.2, height=0) + 
+  xlab('Coefficient Estimate')+
+  scale_y_discrete(name='',labels=c('Previous','Current\n(after 1 year)'))+
+  facet_wrap(~race_category) +emomem_theme+coord_flip()
+ggsave('../Output/fig/pdf/fig2c_race_contrast.pdf',height=6,width= 18)
+ggsave('../Output/fig/png/fig2c_race_contrast.png',height=6, width=18)
+
+
+fig2d_eth_contrast <- Rem_911_MCMC_T2_weighted_eth %>% emtrends(specs = 'eth_category', var = 'curr_experience') %>% as.data.frame %>% mutate(type='curr_experience') %>% rename(trend=curr_experience.trend) %>% 
+  rbind(Rem_911_MCMC_T2_weighted_eth %>% emtrends(specs = 'eth_category', var = 'prev_experience') %>% as.data.frame %>% mutate(type='prev_experience') %>% rename(trend=prev_experience.trend))
+
+fig2d_eth_contrast %>%  
+  mutate(eth_category=ifelse(eth_category=='Other Or NA','Non-Hispanic','Hispanic')) %>% 
+  ggplot(aes(y=type, x=trend)) + 
+  geom_point() +
+  geom_errorbarh(aes(xmin=lower.HPD, xmax=upper.HPD), linewidth=3, color='blue', alpha=0.2, height=0) + 
+  xlab('Coefficient Estimate')+
+  scale_y_discrete(name='',labels=c('Previous','Current\n(after 1 year)'))+
+  facet_wrap(~eth_category) +emomem_theme+coord_flip()
+ggsave('../Output/fig/pdf/fig2c_eth_contrast.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig2c_eth_contrast.png',height=6, width=12)
+
+```
+
+#### Separate emotion - data viz
+```{r}
+nine11_BRem_T2_discrete %>% ggplot(aes(y=stress_memory)) + 
+  geom_smooth(aes(x = prev_experience), formula = 'y~x', method='lm', color='black', alpha=0.3) +
+  geom_smooth(aes(x = curr_experience), formula = 'y~x', method='lm', color='darkgrey', alpha=0.3) +  facet_wrap(~item)+
+  xlab('Experienced Intensity of Negative Feelings')+
+  ylab('Remembered Intensity of\nNegative Feelings')+
+  emomem_theme
+ggsave('../Output/fig/pdf/fig2c_discrete.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig2c_discrete.png',height=6, width=12)
+
+```
+
+#### Separate Emotion - model viz
+```{r}
+fig2d_discrete_contrast <- Rem_911_MCMC_discrete %>% emtrends(specs = 'item', var = 'curr_experience') %>% as.data.frame %>% mutate(type='curr_experience') %>% rename(trend=curr_experience.trend) %>% 
+  rbind(Rem_911_MCMC_discrete %>% emtrends(specs = 'item', var = 'prev_experience') %>% as.data.frame %>% mutate(type='prev_experience') %>% rename(trend=prev_experience.trend))
+
+fig2d_discrete_contrast %>% ggplot(aes(y=type, x=trend)) + 
+  geom_point() +
+  geom_errorbarh(aes(xmin=lower.HPD, xmax=upper.HPD), linewidth=3, color='blue', alpha=0.2, height=0) + 
+  xlab('Coefficient Estimate')+
+  scale_y_discrete(name='',labels=c('Previous','Current\n(after 1 year)'))+
+  facet_wrap(~item) + emomem_theme + coord_flip()
+ggsave('../Output/fig/pdf/fig2c_discrete_contrast.pdf',height=12,width= 18)
+ggsave('../Output/fig/png/fig2c_discrete_contrast.png',height=12, width=18)
+
+```
+
+## Dev ~ MemTime + prev_experience 
+### 9/11
+#### Covariate - data viz
+```{r}
+p_911_avg_gender <- nine11_percent %>% 
+  filter(gender != 'Not stated') %>% 
+  mutate(time = factor(time, levels = c(2:4),
+                       labels = c('1 year','3 years','10 years'))) %>% 
+  ggplot(aes(x=time, y=memdev, group=gender)) + 
+    stat_summary() + 
+    stat_summary(geom='line', aes(group=1))
+
+p_911_avg_gender + ylab('Memory Deviation') +
+  xlab('Time Interval') +
+  facet_wrap(~gender)+
+  emomem_theme
+ggsave('../Output/fig/pdf/fig3_gender.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fige_gender.png',height=6, width=12)
+
+p_911_avg_race <- nine11_percent %>% 
+  filter(race_category != 'Other Or NA' & race_category != 'Mixed') %>% 
+  mutate(time = factor(time, levels = c(2:4),
+                       labels = c('1 year','3 years','10 years'))) %>% 
+  ggplot(aes(x=time, y=memdev, group=race_category)) + 
+    stat_summary() + 
+    stat_summary(geom='line', aes(group=1))
+
+p_911_avg_race + ylab('Memory Deviation') +
+  xlab('Time Interval') +
+  facet_wrap(~race_category)+
+  emomem_theme
+ggsave('../Output/fig/pdf/fig3_race.pdf',height=6,width= 18)
+ggsave('../Output/fig/png/fige_race.png',height=6, width=18)
+
+p_911_avg_eth <- nine11_percent %>% 
+  mutate(eth_category=ifelse(eth_category=='Other Or NA','Non-Hispanic',eth_category)) %>% 
+  mutate(time = factor(time, levels = c(2:4),
+                       labels = c('1 year','3 years','10 years'))) %>% 
+  ggplot(aes(x=time, y=memdev, group=eth_category)) + 
+    stat_summary() + 
+    stat_summary(geom='line', aes(group=1))
+
+p_911_avg_eth + ylab('Memory Deviation') +
+  xlab('Time Interval') +
+  facet_wrap(~eth_category)+
+  emomem_theme
+ggsave('../Output/fig/pdf/fig3_eth.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fige_eth.png',height=6, width=12)
+```
+
+#### Covariate - model viz
+```{r}
+fig3_gender_contrast <- Time_avg_911_MCMC_weighted_gender %>% emmeans(specs = 'time', by = 'gender') %>% contrast('trt.vs.ctrl') 
+plot(fig3_gender_contrast[1:4]) + facet_wrap(~gender, nrow = 1, scale='free_x') + scale_y_discrete(labels=c('3 years -\n1 year','10 years -\n1 year'))  + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme + coord_flip() + xlab('Estimate') + ylab('Contrast')
+ggsave('../Output/fig/pdf/fig3_gender_contrast.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fige_gender_contrast.png',height=6, width=12)
+
+fig3_race_contrast <- Time_avg_911_MCMC_weighted_race %>% emmeans(specs = 'time', by = 'race_category') %>% contrast('trt.vs.ctrl') 
+plot(fig3_race_contrast[c(1:4,7:8)]) + facet_wrap(~race_category, nrow = 1, scale='free_x') + scale_y_discrete(labels=c('3 years -\n1 year','10 years -\n1 year'))  + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme + coord_flip() + xlab('Estimate') + ylab('Contrast')
+ggsave('../Output/fig/pdf/fig3_race_contrast.pdf',height=6,width= 18)
+ggsave('../Output/fig/png/fige_race_contrast.png',height=6, width=18)
+
+supp.labs <- c("Hispanic", "Non-Hispanic")
+names(supp.labs) <- c("Hispanic", "Other Or NA")
+
+fig3_eth_contrast <- Time_avg_911_MCMC_weighted_eth %>% emmeans(specs = 'time', by = 'eth_category') %>% contrast('trt.vs.ctrl') 
+plot(fig3_eth_contrast) + facet_wrap(~eth_category, nrow = 1, scale='free_x', labeller=labeller(eth_category=supp.labs)) + scale_y_discrete(labels=c('3 years -\n1 year','10 years -\n1 year'))  + geom_vline(xintercept = 0, color='red', linetype='dashed') + emomem_theme + coord_flip() + xlab('Estimate') + ylab('Contrast')
+ggsave('../Output/fig/pdf/fig3_eth_contrast.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fige_eth_contrast.png',height=6, width=12)
+```
+
+#### Separate emotion - data viz
+```{r}
+p_911_discrete <- nine11_wide_subj_dev %>% 
+  mutate(time = factor(MemTime, levels = c('memdev2', 'memdev3', 'memdev4'),
+                       labels = c('1 year','3 years','10 years'))) %>% 
+  ggplot(aes(x=time, y=Dev)) + 
+    stat_summary(aes(group=item, color=item)) + 
+    stat_summary(geom='line', aes(group=item, color=item))
+
+p_911_discrete + ylab('Memory Deviation') +
+  xlab('Time Interval') +
+  emomem_theme + 
+  scale_color_discrete(name='')+
+  theme(legend.position = 'right')
+ggsave('../Output/fig/pdf/fig3_discrete.pdf',height=6,width= 9)
+ggsave('../Output/fig/png/fige_discrete.png',height=6, width=9)
+```
+
+#### Separate emotion - model viz
+```{r}
+fig3_discrete_contrast <- StressOTEmo911_MCMC_withprev %>% emmeans(specs = 'MemTime', by = 'item') %>% contrast('trt.vs.ctrl') 
+plot(fig3_discrete_contrast) + facet_wrap(~item, nrow = 2, scale='free_x') + scale_y_discrete(labels=c('3 years -\n1 year','10 years -\n1 year'))  + geom_vline(xintercept = 0, color='red', linetype='dashed') + 
+  emomem_theme + coord_flip() + xlab('Estimate') + ylab('Contrast')
+ggsave('../Output/fig/pdf/fig3_discrete_contrast.pdf',height=12,width= 18)
+ggsave('../Output/fig/png/fige_discrete_contrast.png',height=12, width=18)
+```
+
+## Separate Analysis Overestimation ~ Delta Emotion Well-being
+### Covid - delta emo
+#### Covariate - data viz
+```{r}
+covid_long_pca_demo <- covid_wide %>% mutate(neg_PCA_T1 = -PCA_T1, neg_PCA_T2 = -PCA_T2) %>%
+  filter(!is.na(neg_PCA_T1) & !is.na(neg_PCA_T2)) %>% pivot_longer(cols = c('neg_PCA_T1','neg_PCA_T2'),
+                            names_to = 'time',
+                            values_to = 'Subjective_Well_being') %>% 
+  dplyr::select(Subject, time, Subjective_Well_being, T1_Demographics_gender, T1_Demographics_race_category, T1_Demographics_HispanicLatino) %>% 
+  mutate(time = factor(time, levels = c('neg_PCA_T1','neg_PCA_T2'),
+                       labels = c('Previous','Current (after 1 year)')))
+p_covid_long_pca_gender <- covid_long_pca_demo %>%
+  filter(T1_Demographics_gender != 'Other') %>% ggplot(aes(x=time, y=Subjective_Well_being)) + 
+  stat_summary() + facet_wrap(~T1_Demographics_gender)
+p_covid_long_pca_gender + emomem_theme + 
+  xlab('Time') + ylab('Subjective Well-being')
+ggsave('../Output/fig/pdf/fig4_gender.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig4_gender.png',height=6, width=12)
+
+p_covid_long_pca_race <- covid_long_pca_demo %>%
+  filter(T1_Demographics_race_category != 'Other' & T1_Demographics_race_category != 'Mixed') %>% ggplot(aes(x=time, y=Subjective_Well_being)) + 
+  stat_summary() + facet_wrap(~T1_Demographics_race_category)
+p_covid_long_pca_race + emomem_theme + 
+  xlab('Time') + ylab('Subjective Well-being')
+ggsave('../Output/fig/pdf/fig4_race.pdf',height=6,width= 18)
+ggsave('../Output/fig/png/fig4_race.png',height=6, width=18)
+
+p_covid_long_pca_eth <- covid_long_pca_demo %>%
+  mutate(T1_Demographics_HispanicLatino=ifelse(T1_Demographics_HispanicLatino==0, 'non-Hispanic','Hispanic')) %>% 
+   ggplot(aes(x=time, y=Subjective_Well_being)) + 
+  stat_summary() + facet_wrap(~T1_Demographics_HispanicLatino)
+p_covid_long_pca_eth + emomem_theme + 
+  xlab('Time') + ylab('Subjective Well-being')
+ggsave('../Output/fig/pdf/fig4_eth.pdf',height=6,width= 12)
+ggsave('../Output/fig/png/fig4_eth.png',height=6, width=12)
+
+
+```
+
+### Covid - relationship
+#### Covariate - data viz
+```{r}
+p_delta_EmoWell_gender <- covid_percent %>%
+  filter(T1_Demographics_gender != 'Other') %>% ggplot(aes(x=PCA_delta, y=Covid_Dev)) + 
+  geom_smooth(formula='y~x',method='lm', aes(group=T1_Demographics_gender, fill=T1_Demographics_gender, color=T1_Demographics_gender), alpha=0.2)
+
+p_delta_EmoWell_gender + 
+  geom_vline(xintercept = 0, linetype = 'dashed') + 
+  xlab('Emotional Well-being\nImprovement in 1 Year') +
+  ylab('Memory Deviation') + 
+  emomem_theme + 
+  scale_color_discrete(name='')+
+  scale_fill_discrete(name='')
+ggsave('../Output/fig/pdf/fig4_gender_contrast.pdf',height=6,width= 6)
+ggsave('../Output/fig/png/fig4_gender_contrast.png',height=6, width=6)
+
+p_delta_EmoWell_race <- covid_percent %>%
+  filter(T1_Demographics_race_category != 'Other' & T1_Demographics_race_category != 'Mixed') %>% ggplot(aes(x=PCA_delta, y=Covid_Dev)) + 
+  geom_smooth(formula='y~x',method='lm', aes(group=T1_Demographics_race_category, fill=T1_Demographics_race_category, color=T1_Demographics_race_category), alpha=0.2)
+
+p_delta_EmoWell_race + 
+  geom_vline(xintercept = 0, linetype = 'dashed') + 
+  xlab('Emotional Well-being\nImprovement in 1 Year') +
+  ylab('Memory Deviation') + 
+  emomem_theme + 
+  scale_color_discrete(name='')+
+  scale_fill_discrete(name='')
+ggsave('../Output/fig/pdf/fig4_race_contrast.pdf',height=6,width= 6)
+ggsave('../Output/fig/png/fig4_race_contrast.png',height=6, width=6)
+
+p_delta_EmoWell_eth <- covid_percent %>%
+  mutate(T1_Demographics_HispanicLatino = ifelse(T1_Demographics_HispanicLatino==0, 'Non-Hispanic', 'Hispanic')) %>% 
+  ggplot(aes(x=PCA_delta, y=Covid_Dev)) + 
+  geom_smooth(formula='y~x',method='lm', aes(group=T1_Demographics_HispanicLatino, fill=T1_Demographics_HispanicLatino, color=T1_Demographics_HispanicLatino), alpha=0.2)
+
+p_delta_EmoWell_eth + 
+  geom_vline(xintercept = 0, linetype = 'dashed') + 
+  xlab('Emotional Well-being\nImprovement in 1 Year') +
+  ylab('Memory Deviation') + 
+  emomem_theme + 
+  scale_color_discrete(name='')+
+  scale_fill_discrete(name='')
+ggsave('../Output/fig/pdf/fig4_eth_contrast.pdf',height=6,width= 6)
+ggsave('../Output/fig/png/fig4_eth_contrast.png',height=6, width=6)
+
+```
+
 ```{r}
 sessionInfo()
 ```

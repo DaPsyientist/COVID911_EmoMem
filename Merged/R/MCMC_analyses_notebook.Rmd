@@ -20,7 +20,7 @@ For any question, contact Haoxue (haoxue_fan@g.harvard.edu) or Johnny (jcastillo
 source('utils.R')
 # read in data
 # if you wish to load in the saved RData file, uncomment the line below
-#load(file = '../data/BayesRegObj.RData')
+load(file = '../data/BayesRegObj.RData')
 covid_wide <-  read.csv('../data/Complete_test_Dev_Exp_Only_Data_Manipulation.csv') #each row is one observation, T1 and T2 separated by prefix in the column
 nine11_long_avg <- read.csv('../data/df.emo.long.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
 
@@ -29,6 +29,7 @@ nine11_long_avg_T2 <- nine11_long_avg %>% filter(time==2)
 
 ## define var related to MCMC
 niters <- 40000
+niters_supp <- 4000
 seed_no <- 1636
 ```
 
@@ -91,10 +92,89 @@ describe_posterior(MemType_covid_MCMC)
 
 People's T2_experienced covid stress is smaller than T1_experienced, while T2_remembered is higher than T1_experienced.
 
-[Haoxue: not sure how to deal with the words below yet.]
 Note that in the plot above (and the model) the DVs have been beta transformed.
 
 If we want to see the results on its original scale, we will need to run the same analysis but this time possibly use a beta linear mixed regrsssion.
+
+### Covariate
+
+This set of analysis tries to answer the question: what are some moderators in the relationship between previous, current, and remembered negative emotion experience? Given the impact of covid and 9/11 to our life, it is important to document how it may impact different population differently. Here given the data collected, we focus on the potential moderating role of gender, race, and ethnicity. 
+
+```{r covariate covid}
+# Before we get started, we cleaned up the race variable by creating a new variable called 'mix' to include all people who identify with more than one race
+covid_long_type <- covid_long_type %>% 
+  mutate(T1_Demographics_race_category = case_when(T1_Demographics_race == 'White/Caucasian' ~ 'White',
+                                                   T1_Demographics_race == 'Black/African American' ~ 'Black',
+                                                   T1_Demographics_race == 'Asian' ~ 'Asian',
+                                                   is.na(T1_Demographics_race) ~ 'Other',
+                                                   TRUE ~ 'Mixed'))
+
+# gender
+if (!exists("MemType_covid_MCMC_covariate_gender")){
+MemType_covid_MCMC_covariate_gender <- stan_glmer(BStress ~ MemType*(T1_Demographics_gender) + (1|Subject), 
+                              family = mgcv::betar, iter= niters_supp, seed=seed_no, 
+                              data = covid_long_type)}
+summary(MemType_covid_MCMC_covariate_gender, pars = c("alpha", "beta"))
+summary(MemType_covid_MCMC_covariate_gender, pars = c("alpha", "beta"))[5:6,] # 0 is included in 95% credible interval
+
+MemType_covid_MCMC_covariate_gender %>% emmeans(specs = 'MemType', by = 'T1_Demographics_gender') %>% contrast('trt.vs.ctrl') 
+
+MemType_covid_MCMC_covariate_gender %>% emmeans(specs = c('MemType', 'T1_Demographics_gender')) %>% 
+  contrast(list(c(1,-1,0, -1,1,0, 0,0,0), c(1,0,-1,-1,0,1,0,0,0)))
+
+# race
+if (!exists("MemType_covid_MCMC_covariate_race")){
+MemType_covid_MCMC_covariate_race <- stan_glmer(BStress ~ MemType*(T1_Demographics_race_category) + (1|Subject), 
+                              family = mgcv::betar, iter= niters_supp, seed=seed_no, 
+                              data = covid_long_type)}
+summary(MemType_covid_MCMC_covariate_race, pars = c("alpha", "beta"))
+summary(MemType_covid_MCMC_covariate_race, pars = c("alpha", "beta"))[8:15,]
+MemType_covid_MCMC_covariate_race %>% emmeans(specs = 'MemType', by = 'T1_Demographics_race_category') %>% contrast('trt.vs.ctrl') 
+#MemType_covid_MCMC_covariate_race %>% emmeans(specs = 'T1_Demographics_race_category', by = 'MemType') %>% contrast('pairwise')
+#if (!exists("MemType_covid_MCMC_covariate_race_refW")){
+#MemType_covid_MCMC_covariate_race_refW <- stan_glmer(BStress ~ MemType*(T1_Demographics_race_category) + (1|Subject), 
+#                              family = mgcv::betar, iter= niters_supp, seed=seed_no, 
+#                              data = covid_long_type %>% mutate(T1_Demographics_race_category=relevel(factor(T1_Demographics_race_category), ref='White')))}
+#summary(MemType_covid_MCMC_covariate_race_refW, pars=c('alpha','beta'))[8:15,]
+
+MemType_covid_MCMC_covariate_race %>% emmeans(specs = c('MemType', 'T1_Demographics_race_category')) %>% 
+  contrast(list(c(1,-1,0,-1,1,0,0,0,0,0,0,0,0,0,0),
+                c(1,-1,0,0,0,0,0,0,0,0,0,0,-1,1,0),
+                c(0,0,0,1,-1,0,0,0,0,0,0,0,-1,1,0),
+                c(1,0,-1,-1,0,1,0,0,0,0,0,0,0,0,0),
+                c(1,0,-1,0,0,0,0,0,0,0,0,0,-1,0,1),
+                c(0,0,0,1,0,-1,0,0,0,0,0,0,-1,0,1)))
+
+# ethnicity
+if (!exists("MemType_covid_MCMC_covariate_eth")){
+MemType_covid_MCMC_covariate_eth <- stan_glmer(BStress ~ MemType*(T1_Demographics_HispanicLatino) + (1|Subject), 
+                              family = mgcv::betar, iter= niters_supp, seed=seed_no, 
+                              data = covid_long_type)}
+MemType_covid_MCMC_covariate_eth %>% emmeans(specs = 'MemType', by = 'T1_Demographics_HispanicLatino') %>% contrast('trt.vs.ctrl') 
+MemType_covid_MCMC_covariate_eth %>% emmeans(specs = c('MemType',  'T1_Demographics_HispanicLatino')) %>% 
+  contrast(list(c(1,-1,0,-1,1,0),
+                c(1,0,-1,-1,0,1)))
+
+if (!exists("MemType_covid_MCMC_covariate_ses_country")){
+MemType_covid_MCMC_covariate_ses_country <- stan_glmer(BStress ~ MemType*(T1_SES_ladderCountry) + (1|Subject), 
+                              family = mgcv::betar, iter= niters_supp, seed=seed_no, 
+                              data = covid_long_type)}
+ses_mean <- covid_wide$T1_SES_ladderCountry %>% mean(na.rm=T)
+ses_std <- covid_wide$T1_SES_ladderCountry %>% var(na.rm=T) %>% sqrt
+#MemType_covid_MCMC_covariate_ses_country %>% emmeans(specs = 'T1_SES_ladderCountry', by = 'MemType', at = list(T1_SES_ladderCountry = c(ses_mean-ses_std, ses_mean+ses_std)) ) %>% contrast('trt.vs.ctrl')
+MemType_covid_MCMC_covariate_ses_country %>% emmeans(by = 'T1_SES_ladderCountry', specs  = 'MemType', at = list(T1_SES_ladderCountry = c(ses_mean-ses_std, ses_mean+ses_std)) ) %>% contrast('trt.vs.ctrl')
+
+MemType_covid_MCMC_covariate_ses_country %>% emmeans(specs = c('T1_SES_ladderCountry', 'MemType'), at = list(T1_SES_ladderCountry = c(ses_mean-ses_std, ses_mean+ses_std))) %>% 
+  contrast(list(c(1,-1,-1,1,0,0),
+                c(1,-1,0,0,-1,1)))
+```
+
+Let's quickly summarise our findings here: 
+- gender: (1) both female and male demonstrate the pattern of T2_experienced stress < T1_experienced stress & T2_remembered > T1_experienced; (2) over three measurements, female participants demonstrate higher level of stress (i.e., higher T1_experienced, T2_experirenced, and T2_remembered stress) (we refrain from discussing other here given the insufficient sample size)
+- race: (1) Asian and White participants demonstrate the pattern of T2_experienced stress < T1_experienced stress & T2_remembered > T1_experienced, while Black participants do not show difference T2_experienced vs. T1_experienced or T2_remembered vs. T1_experienced. Mixed participants do not show difference between T2_remembered vs. T1_experienced. (2) For T2_remembered, Asian participants remember higher stress than black participants. (we refrain from discussing other here given the insufficient sample size)
+- ethnicity: (1) hispanic participants do not show difference between T2_experienced and T1_experienced stress at 95% HDI, but will show a difference at 90% HDI. There is no difference between the stress they experience at three data points separately.
+
+(for graph, see the plot notebook)
 
 ## 911
 
@@ -127,6 +207,94 @@ plot_model(MemType_911_MCMC_T2, type = "pred", ci.lvl = .95, bpe.color = "red")
 describe_posterior(MemType_911_MCMC_T2)
 
 ```
+
+### Covariate
+```{r}
+nine11_long_type <- nine11_long_type %>% left_join(nine11_long_avg.demo %>% dplyr::select(Subject, age, gender, race_1, origin_1)) %>% 
+  rename(race=race_1, origin=origin_1) %>% mutate(race_category = case_when(race == 'White' ~ 'White',
+                                                                          race == 'Black' ~ 'Black',
+                                                                          race == 'Asian' | race == 'East Indian' ~ 'Asian',
+                                                                          TRUE ~ 'Other Or NA'),
+                                                  eth_category = case_when(race == 'Hispanic' ~ 'Hispanic', TRUE ~ 'Other Or NA'))
+
+if (!exists("MemType_911_MCMC_T2_gender")){
+MemType_911_MCMC_T2_gender <- stan_glmer(BNegEmo ~ MemType*gender + (1|Subject), 
+                                family = mgcv::betar, iter= niters_supp, seed=seed_no,
+                                data = nine11_long_type)}
+MemType_911_MCMC_T2_gender %>% emmeans(specs = 'MemType', by = 'gender') %>% contrast('trt.vs.ctrl')
+MemType_911_MCMC_T2_gender %>% emmeans(specs = c('MemType', 'gender')) %>% 
+  contrast(list(c(1,-1,0,-1,1,0,0,0,0),
+                 c(1,0,-1,-1,0,1,0,0,0)))
+
+#MemType_911_MCMC_T2_gender %>% emmeans(by = 'MemType', specs = 'gender') %>% contrast('trt.vs.ctrl')
+
+if (!exists("MemType_911_MCMC_T2_race")){
+MemType_911_MCMC_T2_race <- stan_glmer(BNegEmo ~ MemType*race_category + (1|Subject), 
+                                family = mgcv::betar, iter= niters_supp, seed=seed_no,
+                                data = nine11_long_type)}
+MemType_911_MCMC_T2_race %>% emmeans(specs = 'MemType', by = 'race_category') %>% contrast('trt.vs.ctrl')
+MemType_911_MCMC_T2_race %>% emmeans(specs = c('MemType', 'race_category')) %>% 
+  contrast(list(c(1,-1,0,-1,1,0,0,0,0,0,0,0), #neg
+                c(1,-1,0,0,0,0,0,0,0,-1,1,0), #pos
+                c(0,0,0,1,-1,0,0,0,0,-1,1,0), #pos
+                c(1,0,-1,-1,0,1,0,0,0,0,0,0),
+                c(1,0,-1,0,0,0,0,0,0,-1,0,1),
+                c(0,0,0,1,0,-1,0,0,0,-1,0,1)))
+#MemType_911_MCMC_T2_race %>% emmeans(by = 'MemType', specs = 'race_category') %>% contrast('trt.vs.ctrl')
+
+if (!exists("MemType_911_MCMC_T2_eth")){
+MemType_911_MCMC_T2_eth <- stan_glmer(BNegEmo ~ MemType*eth_category + (1|Subject), 
+                                family = mgcv::betar, iter= niters_supp, seed=seed_no,
+                                data = nine11_long_type)}
+MemType_911_MCMC_T2_eth %>% emmeans(specs = 'MemType', by = 'eth_category') %>% contrast('trt.vs.ctrl')
+MemType_911_MCMC_T2_eth %>% emmeans(specs = c('MemType','eth_category')) %>% 
+  contrast(list(c(1,-1,0,-1,1,0),
+                 c(1,0,-1,-1,0,1)))
+
+#if (!exists("MemType_911_MCMC_T2_origin")){
+#MemType_911_MCMC_T2_origin <- stan_glmer(BNegEmo ~ MemType*origin + (1|Subject), 
+#                                family = mgcv::betar, iter= niters_supp, seed=seed_no,
+#                                data = nine11_long_type)}
+#MemType_911_MCMC_T2_origin %>% emmeans(specs = 'MemType', by = 'origin') %>% contrast('trt.vs.ctrl')
+#MemType_911_MCMC_T2_origin %>% emmeans(by = 'MemType', specs = 'origin') %>% contrast('trt.vs.ctrl')
+
+
+```
+
+### Discrete Neg Emo
+```{r}
+nine11_wide <- read.csv('../data/df.emo.wide_Only_Data_Manipulation.csv') %>% #each row is one observation at one time point, stress_memory is specific to one emotion
+  left_join(nine11_long_avg.demo %>% dplyr::select(Subject, age, gender, race_1, origin_1)) %>% 
+  rename(race=race_1, origin=origin_1) %>% mutate(race_category = case_when(race == 'White' ~ 'White',
+                                                                          race == 'Black' ~ 'Black',
+                                                                          race == 'Asian' | race == 'East Indian' ~ 'Asian',
+                                                                          TRUE ~ 'Other Or NA'),
+                                                  eth_category = case_when(race == 'Hispanic' ~ 'Hispanic', TRUE ~ 'Other Or NA'))
+
+nine11_wide_type <- nine11_wide %>% dplyr::select(Subject, item, experienced1, experienced2, remembered2, memdev2) %>% rename(prev_experience=experienced1, curr_experience=experienced2, stress_memory=remembered2) %>% 
+  mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
+         B911_Exp2 = beta_squeeze((curr_experience-1)/4),
+         B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
+  pivot_longer(cols = c('B911_Exp1', 'B911_Exp2','B911_Rem'),
+               names_to = 'MemType', values_to = 'BNegEmo') %>% 
+  mutate(MemType = relevel(factor(MemType), ref='B911_Exp1')) %>% 
+  filter(!is.na(BNegEmo))
+
+# this one is pretty large
+if (!exists("MemType_911_MCMC_T2_discrete")) {
+MemType_911_MCMC_T2_discrete <- stan_glmer(BNegEmo ~ MemType*item + (1|Subject), 
+                                family = mgcv::betar, iter= niters_supp, seed=seed_no,
+                                data = nine11_wide_type)
+}
+contrast(emmeans(MemType_911_MCMC_T2_discrete, ~ MemType*item, by='item'), 'trt.vs.ctrl')
+contrast(emmeans(MemType_911_MCMC_T2_discrete, ~ MemType*item, by='MemType'), 'pairwise')
+
+contrast(emmeans(MemType_911_MCMC_T2_discrete, ~ MemType*item), 'trt.vs.ctrl')
+
+```
+
+- for anger, confusion, fear, sadness and shock: follow the pattern of T2_experienced stress < T1_experienced stress & T2_remembered > T1_experienced; for frustration, T2_experienced stress < T1_experienced stress & T2_remembered does not differ from T1_experienced
+- for each time point, there seem to exist difference between the level of intensity across different emotions that people are experiencing... not sure how much important it is to go into details here
 
 # Deviance  ~ Dataset (Covid/911_T2) + T1_experienced
 
@@ -180,7 +348,12 @@ Here, we ask the q: how does people reconstruct remembered stress/negemo? We sus
 ## Covid
 ```{r}
 covid_BRem <- covid_wide %>% mutate(BCovid_Rem = beta_squeeze((Covid_Rem-1)/4)) %>% 
-  filter(!is.na(BCovid_Rem)) %>% filter(!is.na(Covid_Exp1)) %>% filter(!is.na(Covid_Exp2))
+  filter(!is.na(BCovid_Rem)) %>% filter(!is.na(Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)) %>% 
+  mutate(T1_Demographics_race_category = case_when(T1_Demographics_race == 'White/Caucasian' ~ 'White',
+                                                   T1_Demographics_race == 'Black/African American' ~ 'Black',
+                                                   T1_Demographics_race == 'Asian' ~ 'Asian',
+                                                   is.na(T1_Demographics_race) ~ 'Other',
+                                                   TRUE ~ 'Mixed'))
 if (!exists("Rem_covid_MCMC_weighted")) {
 Rem_covid_MCMC_weighted <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
                                   family = mgcv::betar, iter= niters, 
@@ -204,9 +377,75 @@ Rem_covid_MCMC_unweighted <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
 #plot_model(Rem_covid_MCMC_unweighted, type = "pred", ci.lvl = .95, bpe.color = "red") 
 mcmc_intervals(as.array(Rem_covid_MCMC_unweighted), pars = c('(Intercept)','Covid_Exp1','Covid_Exp2'))
 describe_posterior(Rem_covid_MCMC_unweighted)
+
 ```
 
 When recalling covid-related stress, both current and prev stress influenced remembered stress, with prev stress inserts a larger influence.
+
+### Covariate
+```{r }
+if (!exists("Rem_covid_MCMC_weighted_gender")){
+Rem_covid_MCMC_weighted_gender <- stan_glm(BCovid_Rem ~ (Covid_Exp1 + Covid_Exp2) * T1_Demographics_gender,
+                                  family = mgcv::betar, iter= niters_supp, 
+                           weights = num_weights_3var, seed = seed_no, data = covid_BRem)
+}
+if (!exists("Rem_covid_MCMC_weighted_race")){
+Rem_covid_MCMC_weighted_race <- stan_glm(BCovid_Rem ~ (Covid_Exp1 + Covid_Exp2) * T1_Demographics_race_category,
+                                  family = mgcv::betar, iter= niters_supp, 
+                           weights = num_weights_3var, seed = seed_no, data = covid_BRem)
+}
+if (!exists("Rem_covid_MCMC_weighted_eth")){
+Rem_covid_MCMC_weighted_eth <- stan_glm(BCovid_Rem ~ (Covid_Exp1 + Covid_Exp2) * T1_Demographics_HispanicLatino,
+                                  family = mgcv::betar, iter= niters_supp, 
+                           weights = num_weights_3var, seed = seed_no, data = covid_BRem)
+}
+if (!exists("Rem_covid_MCMC_weighted_ses_country")){
+Rem_covid_MCMC_weighted_ses_country <- stan_glm(BCovid_Rem ~ (Covid_Exp1 + Covid_Exp2) * T1_SES_ladderCountry,
+                                  family = mgcv::betar, iter= niters_supp, 
+                           weights = num_weights_3var, seed = seed_no, data = covid_BRem)
+}
+
+#summary(Rem_covid_MCMC_weighted_gender, pars = c("alpha", "beta"))
+emtrends(Rem_covid_MCMC_weighted_gender, specs = 'T1_Demographics_gender', var = 'Covid_Exp1')
+emtrends(Rem_covid_MCMC_weighted_gender, specs = 'T1_Demographics_gender', var = 'Covid_Exp2')
+
+emtrends(Rem_covid_MCMC_weighted_gender, specs = 'T1_Demographics_gender', var = 'Covid_Exp1') %>% 
+  rbind(emtrends(Rem_covid_MCMC_weighted_gender, specs = 'T1_Demographics_gender', var = 'Covid_Exp2')) %>% 
+  contrast(list(c(1,-1,0,-1,1,0),
+                c(1,0,0,-1,0,0),
+                c(0,1,0,0,-1,0)))
+
+
+emtrends(Rem_covid_MCMC_weighted_race, specs = 'T1_Demographics_race_category', var = 'Covid_Exp1')
+emtrends(Rem_covid_MCMC_weighted_race, specs = 'T1_Demographics_race_category', var = 'Covid_Exp2')
+emtrends(Rem_covid_MCMC_weighted_race, specs = 'T1_Demographics_race_category', var = 'Covid_Exp1') %>% 
+  rbind(emtrends(Rem_covid_MCMC_weighted_race, specs = 'T1_Demographics_race_category', var = 'Covid_Exp2')) %>% 
+  contrast(list(c(1,-1,0,0,0,-1,1,0,0,0),
+                c(1,0,0,0,-1,-1,0,0,0,1),
+                c(0,1,0,0,-1,0,-1,0,0,1),
+                c(1,0,0,0,0,-1,0,0,0,0),
+                c(0,1,0,0,0,0,-1,0,0,0),
+                c(0,0,0,0,1,0,0,0,0,-1)))
+
+
+emtrends(Rem_covid_MCMC_weighted_eth, specs = 'T1_Demographics_HispanicLatino', var = 'Covid_Exp1')
+emtrends(Rem_covid_MCMC_weighted_eth, specs = 'T1_Demographics_HispanicLatino', var = 'Covid_Exp2')
+
+emtrends(Rem_covid_MCMC_weighted_eth, specs = 'T1_Demographics_HispanicLatino', var = 'Covid_Exp1') %>% 
+  rbind(emtrends(Rem_covid_MCMC_weighted_eth, specs = 'T1_Demographics_HispanicLatino', var = 'Covid_Exp2')) %>% 
+  contrast(list(c(1,-1,-1,1),
+                c(1,0,-1,0),
+                c(0,1,0,-1)))
+
+# still need to think about what interaction we are looking for
+Rem_covid_MCMC_weighted_ses_country %>% emtrends(specs  = 'T1_SES_ladderCountry', var  = 'Covid_Exp1', at = list(T1_SES_ladderCountry = c(ses_mean-ses_std, ses_mean+ses_std)) ) 
+Rem_covid_MCMC_weighted_ses_country %>% emtrends(specs  = 'T1_SES_ladderCountry', var  = 'Covid_Exp2', at = list(T1_SES_ladderCountry = c(ses_mean-ses_std, ses_mean+ses_std)) ) 
+
+Rem_covid_MCMC_weighted_ses_country %>% emtrends(specs  = 'T1_SES_ladderCountry', var  = 'Covid_Exp1', at = list(T1_SES_ladderCountry = c(ses_mean-ses_std, ses_mean+ses_std)) ) %>% 
+  rbind(Rem_covid_MCMC_weighted_ses_country %>% emtrends(specs  = 'T1_SES_ladderCountry', var  = 'Covid_Exp2', at = list(T1_SES_ladderCountry = c(ses_mean-ses_std, ses_mean+ses_std)) ) ) 
+  
+
+```
 
 ## 911
 ```{r}
@@ -234,8 +473,78 @@ plot_model(Rem_911_MCMC_T2_unweighted, type = "pred", ci.lvl = .95, bpe.color = 
 describe_posterior(Rem_911_MCMC_T2_unweighted)
 mcmc_intervals(as.array(Rem_911_MCMC_T2_unweighted), pars = c('(Intercept)','prev_experience','curr_experience'))
 ```
+### Covariate
 
-# Dev ~ MemTime + prev_experience
+```{r }
+nine11_BRem_T2 <- nine11_BRem_T2 %>% 
+  left_join(nine11_long_avg.demo %>% dplyr::select(Subject, age, gender, race_1, origin_1)) %>% 
+  rename(race=race_1, origin=origin_1) %>% mutate(race_category = case_when(race == 'White' ~ 'White',
+                                                                          race == 'Black' ~ 'Black',
+                                                                          race == 'Asian' | race == 'East Indian' ~ 'Asian',
+                                                                          TRUE ~ 'Other Or NA'),
+                                                  eth_category = case_when(race == 'Hispanic' ~ 'Hispanic', TRUE ~ 'Other Or NA'))
+if (!exists("Rem_911_MCMC_T2_weighted_gender")){
+Rem_911_MCMC_T2_weighted_gender <- stan_glm(B911_Rem ~ (prev_experience + curr_experience)*gender,
+                                    family = mgcv::betar, iter= niters_supp, seed=seed_no,
+                                    weights = num_weights_updated, data = nine11_BRem_T2)}
+if (!exists("Rem_911_MCMC_T2_weighted_race")){
+Rem_911_MCMC_T2_weighted_race <- stan_glm(B911_Rem ~ (prev_experience + curr_experience)*race_category,
+                                    family = mgcv::betar, iter= niters_supp, seed=seed_no,
+                                    weights = num_weights_updated, data = nine11_BRem_T2)}
+if (!exists("Rem_911_MCMC_T2_weighted_eth")){
+Rem_911_MCMC_T2_weighted_eth <- stan_glm(B911_Rem ~ (prev_experience + curr_experience)*eth_category,
+                                    family = mgcv::betar, iter= niters_supp, seed=seed_no,
+                                    weights = num_weights_updated, data = nine11_BRem_T2)}
+
+emtrends(Rem_911_MCMC_T2_weighted_gender, specs = 'gender', var = 'prev_experience')
+emtrends(Rem_911_MCMC_T2_weighted_gender, specs = 'gender', var = 'curr_experience')
+emtrends(Rem_911_MCMC_T2_weighted_gender, specs = 'gender', var = 'prev_experience') %>% 
+  rbind(emtrends(Rem_911_MCMC_T2_weighted_gender, specs = 'gender', var = 'curr_experience')) %>% 
+  contrast(list(c(1,-1,0,-1,1,0),
+                c(1,0,0,-1,0,0),
+                c(0,1,0,0,-1,0)))
+
+
+emtrends(Rem_911_MCMC_T2_weighted_race, specs = 'race_category', var = 'prev_experience')
+emtrends(Rem_911_MCMC_T2_weighted_race, specs = 'race_category', var = 'curr_experience')
+
+emtrends(Rem_911_MCMC_T2_weighted_race, specs = 'race_category', var = 'prev_experience') %>% 
+  rbind(emtrends(Rem_911_MCMC_T2_weighted_race, specs = 'race_category', var = 'curr_experience')) %>% 
+  contrast(list(c(1,-1,0,0,-1,1,0,0),
+                c(1,0,0,-1,-1,0,0,1),
+                c(0,1,0,-1,0,-1,0,1),
+                c(1,0,0,0,-1,0,0,0),
+                c(0,1,0,0,0,-1,0,0),
+                c(0,0,0,1,0,0,0,-1)))
+
+emtrends(Rem_911_MCMC_T2_weighted_eth, specs = 'eth_category', var = 'prev_experience')
+emtrends(Rem_911_MCMC_T2_weighted_eth, specs = 'eth_category', var = 'curr_experience')
+
+emtrends(Rem_911_MCMC_T2_weighted_eth, specs = 'eth_category', var = 'prev_experience') %>% 
+  rbind(emtrends(Rem_911_MCMC_T2_weighted_eth, specs = 'eth_category', var = 'curr_experience')) %>% 
+  contrast(list(c(1,-1,-1,1),
+                c(1,0,-1,0),
+                c(0,1,0,-1)))
+
+```
+
+### Discrete Neg Emo
+```{r }
+nine11_BRem_T2_discrete <- nine11_wide %>% dplyr::select(Subject, item, experienced1, experienced2, remembered2) %>% rename(prev_experience=experienced1, curr_experience=experienced2, stress_memory=remembered2) %>% 
+  mutate(B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
+  filter(!is.na(B911_Rem)) %>% filter(!is.na(prev_experience)) %>% filter(!is.na(curr_experience))
+
+if (!exists("Rem_911_MCMC_discrete")) {
+Rem_911_MCMC_discrete <- stan_glmer(B911_Rem ~ (prev_experience + curr_experience) * item + (1|Subject),
+                                     family = mgcv::betar, iter= niters_supp, seed = seed_no,
+                                     data = nine11_BRem_T2_discrete)
+}
+emtrends(Rem_911_MCMC_discrete, specs = 'item', var = 'prev_experience')
+```
+
+# Dev ~ MemTime + prev_experience 
+
+## 911
 
 Using the 9/11 dataset, we test whether the deviation is a function of Time.
 ```{r}
@@ -275,15 +584,87 @@ plot_model(Time_avg_911_MCMC_unweighted, type = "pred", ci.lvl = .95, bpe.color 
 #Posterior Predictive Check (Ppc)
 y_Time_avg_911_MCMC_unweighted <- nine11_percent$Bdev
 yrep_Time_avg_911_MCMC_unweighted <- posterior_predict(Time_avg_911_MCMC_unweighted, draws = 500) 
-very little
+
 #Summarize Posterior
 describe_posterior(Time_avg_911_MCMC_unweighted)
 
 ```
 People overestimate neg emo more at 3-year follow-up than at 1-year and 10-years follow-up. There is no difference between the deviation of negative emotion recalled at 1-year and 10-years follow-up. 
 
+### Covariate
+```{r}
+nine11_percent <- nine11_percent %>% 
+  left_join(nine11_long_avg.demo %>% dplyr::select(Subject, age, gender, race_1, origin_1)) %>% 
+  rename(race=race_1, origin=origin_1) %>% mutate(race_category = case_when(race == 'White' ~ 'White',
+                                                                          race == 'Black' ~ 'Black',
+                                                                          race == 'Asian' | race == 'East Indian' ~ 'Asian',
+                                                                          TRUE ~ 'Other Or NA'),
+                                                  eth_category = case_when(race == 'Hispanic' ~ 'Hispanic', TRUE ~ 'Other Or NA'))
 
-# Separate Analysis (covid): Overestimation ~ Delta Emotion Well-being
+if (!exists("Time_avg_911_MCMC_weighted_gender")) {
+Time_avg_911_MCMC_weighted_gender <- stan_glmer(Bdev ~ time*gender + prev_experience + (1|Subject), 
+                             family = mgcv::betar, iter= niters_supp, 
+                             weights = num_weights_updated, seed = seed_no,
+                             data = nine11_percent)
+}
+if (!exists("Time_avg_911_MCMC_weighted_race")) {
+Time_avg_911_MCMC_weighted_race <- stan_glmer(Bdev ~ time*race_category + prev_experience + (1|Subject), 
+                             family = mgcv::betar, iter= niters_supp, 
+                             weights = num_weights_updated, seed = seed_no,
+                             data = nine11_percent)
+}
+if (!exists("Time_avg_911_MCMC_weighted_eth")) {
+Time_avg_911_MCMC_weighted_eth <- stan_glmer(Bdev ~ time*eth_category + prev_experience + (1|Subject), 
+                             family = mgcv::betar, iter= niters_supp, 
+                             weights = num_weights_updated, seed = seed_no,
+                             data = nine11_percent)
+}
+
+
+Time_avg_911_MCMC_weighted_gender %>% emmeans(specs = 'time', by = 'gender') %>% contrast('trt.vs.ctrl') 
+Time_avg_911_MCMC_weighted_gender %>% emmeans(specs = c('time', 'gender')) %>% 
+  contrast(list(c(1,-1,0,-1,1,0,0,0,0),
+                c(1,0,-1,-1,0,1,0,0,0),
+                c(0,1,-1,0,-1,1,0,0,0)))
+
+Time_avg_911_MCMC_weighted_race %>% emmeans(specs = 'time', by = 'race_category') %>% contrast('trt.vs.ctrl') 
+
+Time_avg_911_MCMC_weighted_race %>% emmeans(specs = c('time', 'race_category')) %>%
+  contrast(list(c(1,-1,0,-1,1,0,0,0,0,0,0,0),
+                c(1,-1,0,0,0,0,0,0,0,-1,1,0),
+                c(0,0,0,1,-1,0,0,0,0,-1,1,0),
+                c(1,0,-1,-1,0,1,0,0,0,0,0,0),
+                c(1,0,-1,0,0,0,0,0,0,-1,0,1),
+                c(0,0,0,1,0,-1,0,0,0,-1,0,1)))
+  
+Time_avg_911_MCMC_weighted_eth %>% emmeans(specs = 'time', by = 'eth_category') %>% contrast('trt.vs.ctrl') 
+
+Time_avg_911_MCMC_weighted_eth %>% emmeans(specs = c('time', 'eth_category')) %>% 
+  contrast(list(c(1,-1,0,-1,1,0),
+                c(1,0,-1,-1,0,1)))
+```
+
+### Discrete Neg Emo
+```{r }
+nine11_wide_subj_dev <- nine11_wide %>% dplyr::select(Subject, item, experienced1, memdev2, memdev3, memdev4) %>% 
+  rename(prev_experience=experienced1) %>% 
+  pivot_longer(cols = memdev2:memdev4, names_to = 'MemTime', values_to = 'Dev') %>% 
+  mutate(item = relevel(factor(item), ref='frustration')) %>% 
+  mutate(Bdev = beta_squeeze((Dev+4)/8)) %>% 
+  filter(!is.na(Bdev)) %>% ungroup()
+
+if (!exists("StressOTEmo911_MCMC_withprev")) {
+StressOTEmo911_MCMC_withprev <- stan_glmer(Bdev ~ prev_experience + MemTime*item + (1|Subject), 
+                                  family = mgcv::betar, 
+                                  iter= niters_supp, seed=seed_no, data = nine11_wide_subj_dev) 
+}
+StressOTEmo911_MCMC_withprev %>% emmeans(specs = 'MemTime', by = 'item') %>% contrast('trt.vs.ctrl') 
+#StressOTEmo911_MCMC %>% emmeans(specs = 'item', by = 'MemTime') %>% pairs() %>% plot # this graph is too messy
+
+```
+# Separate Analysis Overestimation ~ Delta Emotion Well-being
+
+## Covid
 
 Finally, we use Covid dataset and see whether there is any association between delta emotion well-being and deviation.
 
@@ -342,6 +723,136 @@ y_covid_delta_EmoWell_MCMC <- (covid_percent %>% filter(!is.na(twovar_Covid_Exp1
 ```
 
 The results suggest that there is a positive correlation between delta emo well being and deviance. 
+
+### Covariate
+
+```{r}
+# only running covariate model for the first model above
+covid_wide <- covid_wide %>% 
+    mutate(T1_Demographics_race_category = case_when(T1_Demographics_race == 'White/Caucasian' ~ 'White',
+                                                   T1_Demographics_race == 'Black/African American' ~ 'Black',
+                                                   T1_Demographics_race == 'Asian' ~ 'Asian',
+                                                   is.na(T1_Demographics_race) ~ 'Other',
+                                                   TRUE ~ 'Mixed'))
+if (!exists("covid_PCA_MCMC_gender")) {
+covid_PCA_MCMC_gender <- stan_glm(emo_well_being_delta ~ T1_Demographics_gender,
+                           family = "gaussian",
+                           iter= niters_supp, seed=seed_no, data = covid_wide)
+}
+if (!exists("covid_PCA_MCMC_race")) {
+covid_PCA_MCMC_race <- stan_glm(emo_well_being_delta ~ T1_Demographics_race_category,
+                           family = "gaussian",
+                           iter= niters_supp, seed=seed_no, data = covid_wide)
+}
+if (!exists("covid_PCA_MCMC_eth")) {
+covid_PCA_MCMC_eth <- stan_glm(emo_well_being_delta ~ T1_Demographics_HispanicLatino,
+                           family = "gaussian",
+                           iter= niters_supp, seed=seed_no, data = covid_wide)
+}
+if (!exists("covid_PCA_MCMC_ses_country")) {
+covid_PCA_MCMC_ses_country <- stan_glm(emo_well_being_delta ~ T1_SES_ladderCountry,
+                           family = "gaussian",
+                           iter= niters_supp, seed=seed_no, data = covid_wide)
+}
+
+covid_PCA_MCMC_gender %>% emmeans(specs = 'T1_Demographics_gender')
+covid_PCA_MCMC_race %>% emmeans(specs = 'T1_Demographics_race_category')
+covid_PCA_MCMC_eth %>% emmeans(specs = 'T1_Demographics_HispanicLatino')
+covid_PCA_MCMC_ses_country %>% describe_posterior()
+
+covid_PCA_MCMC_gender %>% emmeans(specs = 'T1_Demographics_gender') %>% 
+  contrast('pairwise')
+covid_PCA_MCMC_race %>% emmeans(specs = 'T1_Demographics_race_category') %>% 
+  contrast('pairwise')
+covid_PCA_MCMC_eth %>% emmeans(specs = 'T1_Demographics_HispanicLatino') %>% 
+  contrast('pairwise')
+
+
+covid_percent <- covid_percent %>%
+  mutate(T1_Demographics_race_category = case_when(T1_Demographics_race == 'White/Caucasian' ~ 'White',
+                                                   T1_Demographics_race == 'Black/African American' ~ 'Black',
+                                                   T1_Demographics_race == 'Asian' ~ 'Asian',
+                                                   is.na(T1_Demographics_race) ~ 'Other',
+                                                   TRUE ~ 'Mixed'))
+if (!exists("covid_delta_EmoWell_MCMC_gender")) {
+covid_delta_EmoWell_MCMC_gender <- stan_glm(BCovid_Dev ~ emo_well_being_delta*T1_Demographics_gender + Covid_Exp1,
+                                         family = mgcv::betar, seed = seed_no,
+                                         iter= niters_supp, weights = num_weights_3var,
+                                         covid_percent %>% filter(!is.na(Covid_Exp1)))
+}
+if (!exists("covid_delta_EmoWell_MCMC_race")) {
+covid_delta_EmoWell_MCMC_race <- stan_glm(BCovid_Dev ~ emo_well_being_delta*T1_Demographics_race_category + Covid_Exp1,
+                                         family = mgcv::betar, seed = seed_no,
+                                         iter= niters_supp, weights = num_weights_3var,
+                                         covid_percent %>% filter(!is.na(Covid_Exp1)))
+}
+if (!exists("covid_delta_EmoWell_MCMC_eth")) {
+covid_delta_EmoWell_MCMC_eth <- stan_glm(BCovid_Dev ~ emo_well_being_delta*T1_Demographics_HispanicLatino + Covid_Exp1,
+                                         family = mgcv::betar, seed = seed_no,
+                                         iter= niters_supp, weights = num_weights_3var,
+                                         covid_percent %>% filter(!is.na(Covid_Exp1)))
+}
+if (!exists("covid_delta_EmoWell_MCMC_ses_country")) {
+covid_delta_EmoWell_MCMC_ses_country <- stan_glm(BCovid_Dev ~ emo_well_being_delta*T1_SES_ladderCountry + Covid_Exp1,
+                                         family = mgcv::betar, seed = seed_no,
+                                         iter= niters_supp, weights = num_weights_3var,
+                                         covid_percent %>% filter(!is.na(Covid_Exp1)))
+}
+covid_delta_EmoWell_MCMC_ses_country %>% emtrends(specs  = 'T1_SES_ladderCountry', var  = 'emo_well_being_delta', at = list(T1_SES_ladderCountry = c(ses_mean-ses_std, ses_mean+ses_std)) ) 
+
+covid_delta_EmoWell_MCMC_gender %>% emtrends(var = 'emo_well_being_delta', specs = 'T1_Demographics_gender') 
+covid_delta_EmoWell_MCMC_race %>% emtrends(var = 'emo_well_being_delta', specs = 'T1_Demographics_race_category')
+covid_delta_EmoWell_MCMC_eth %>% emtrends(var = 'emo_well_being_delta', specs = 'T1_Demographics_HispanicLatino') 
+
+covid_delta_EmoWell_MCMC_gender %>% emtrends(var = 'emo_well_being_delta', specs = 'T1_Demographics_gender') %>% 
+  contrast(list(c(1,-1,0)))
+
+covid_delta_EmoWell_MCMC_race %>% emtrends(var = 'emo_well_being_delta', specs = 'T1_Demographics_race_category') %>% 
+  contrast(list(c(1,-1,0,0,0),
+                c(1,0,0,0,-1),
+                c(0,1,0,0,-1)))
+
+covid_delta_EmoWell_MCMC_eth %>% emtrends(var = 'emo_well_being_delta', specs = 'T1_Demographics_HispanicLatino') %>% 
+  contrast(list(c(1,-1)))
+
+```
+
+# Validity of the avg neg emo metric
+Here we provide cronbach alpha for the rating for six negative emotions. 
+
+```{r}
+library(psych)
+alpha_experienced1 <- nine11_wide %>% dplyr::select(Subject, item, experienced1) %>% 
+  pivot_wider(id_cols = Subject, values_from = experienced1, names_from = item) %>% dplyr::select(-Subject) %>% psych::alpha() 
+alpha_experienced1$total
+
+alpha_experienced2 <- nine11_wide %>% dplyr::select(Subject, item, experienced2) %>% 
+  pivot_wider(id_cols = Subject, values_from = experienced2, names_from = item) %>% dplyr::select(-Subject) %>% psych::alpha() 
+alpha_experienced2$total
+
+alpha_remembered2 <- nine11_wide %>% dplyr::select(Subject, item, remembered2) %>% 
+  pivot_wider(id_cols = Subject, values_from = remembered2, names_from = item) %>% dplyr::select(-Subject) %>% psych::alpha() 
+alpha_remembered2$total
+```
+We also provide the calculation for omega
+```{r}
+library(psych)
+omega_experienced1 <- nine11_wide %>% dplyr::select(Subject, item, experienced1) %>% 
+  pivot_wider(id_cols = Subject, values_from = experienced1, names_from = item) %>% dplyr::select(-Subject) %>% psych::omega() 
+omega_experienced1$omega.tot
+
+omega_experienced2 <- nine11_wide %>% dplyr::select(Subject, item, experienced2) %>% 
+  pivot_wider(id_cols = Subject, values_from = experienced2, names_from = item) %>% dplyr::select(-Subject) %>% psych::omega() 
+omega_experienced2$omega.tot
+
+omega_remembered2 <- nine11_wide %>% dplyr::select(Subject, item, remembered2) %>% 
+  pivot_wider(id_cols = Subject, values_from = remembered2, names_from = item) %>% dplyr::select(-Subject) %>% psych::omega() 
+omega_remembered2$omega.tot
+```
+
+
+# Save var
+
 ```{r}
 # the code below was used to save bayesian regression objects
 save(MemType_covid_MCMC, MemType_911_MCMC_T2, 
@@ -349,6 +860,30 @@ save(MemType_covid_MCMC, MemType_911_MCMC_T2,
             Rem_911_MCMC_T2_weighted, Rem_911_MCMC_T2_unweighted, 
             covid_PCA_MCMC, covid_delta_EmoWell_MCMC, covid_delta_EmoWell_MCMC_both, covid_delta_EmoWell_MCMC_both_2var, file='BayesRegObj.RData')
 sessionInfo()
+
+# another set of code to save all the new models that we have run additionally
+#var.save <- c(
+#  paste0('MemType_covid_MCMC_covariate_',c('gender','race','eth','ses_country')),
+#  paste0('MemType_911_MCMC_T2_',c('gender','race','eth')),
+#  'MemType_911_MCMC_T2_discrete',
+#  paste0('Rem_covid_MCMC_weighted_',c('gender','race','eth','ses_country')),
+#  paste0('Rem_911_MCMC_T2_weighted_',c('gender','race','eth')),
+#  Rem_911_MCMC_discrete,
+#  paste0('Time_avg_911_MCMC_weighted_',c('gender','race','eth')),
+#  StressOTEmo911_MCMC_withprev,
+#  paste0('covid_PCA_MCMC_',c('gender','race','eth','ses_country')),
+#  paste0('covid_delta_EmoWell_MCMC_',c('gender','race','eth','ses_country')))
+save(MemType_covid_MCMC_covariate_gender, MemType_covid_MCMC_covariate_race, MemType_covid_MCMC_covariate_eth, MemType_covid_MCMC_covariate_ses_country,
+     MemType_911_MCMC_T2_gender, MemType_911_MCMC_T2_race, MemType_911_MCMC_T2_eth, MemType_911_MCMC_T2_discrete,
+     Rem_covid_MCMC_weighted_gender, Rem_covid_MCMC_weighted_race, Rem_covid_MCMC_weighted_eth, Rem_covid_MCMC_weighted_ses_country,
+     Rem_911_MCMC_T2_weighted_gender, Rem_911_MCMC_T2_weighted_race, Rem_911_MCMC_T2_weighted_eth, Rem_911_MCMC_discrete,
+     Time_avg_911_MCMC_weighted_gender, Time_avg_911_MCMC_weighted_race, Time_avg_911_MCMC_weighted_eth,
+     StressOTEmo911_MCMC_withprev, 
+     covid_PCA_MCMC_gender, covid_PCA_MCMC_race, covid_PCA_MCMC_eth, covid_PCA_MCMC_ses_country,
+     covid_delta_EmoWell_MCMC_gender, covid_delta_EmoWell_MCMC_race, covid_delta_EmoWell_MCMC_eth, covid_delta_EmoWell_MCMC_ses_country, 
+     file='BayesRegObj_911Extra.RData')
+
+
 ```
 
 

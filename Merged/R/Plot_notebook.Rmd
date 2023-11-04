@@ -83,6 +83,22 @@ ggsave('../Output/fig/pdf/Supp_delta_date.pdf', height=6, width=8)
 ggsave('../Output/fig/png/Supp_delta_date.png', height=6, width=8)
 ```
 
+
+We also provide a graph on when (which month) participants have entered the experiment (T1)
+
+```{r}
+covid_wide %>% 
+  ggplot(aes(x=month(T2_Dat))) + 
+  geom_histogram(color='black')+
+  xlab('month')+
+  scale_x_continuous(breaks=c(4:12))+
+  emomem_theme
+# what is the proportion of people at T1 is before Aug?
+covid_wide$T2_Month <- month(covid_wide$T2_Dat)
+sum(covid_wide$T2_Month<=8) / nrow(covid_wide)
+sum(covid_wide$T2_Month==11) / nrow(covid_wide)
+```
+
 # Supplementary Table 9 for Covid related stressors
 ```{r}
 T1_covid_header <- read.csv('../data-raw/COVIDdata_vertical_new_q.csv')
@@ -142,6 +158,24 @@ r_pca$r[,1:2] %>% round(3) %>%
   set_rownames(r_pca_rowname) %>% 
   set_colnames(r_pca_rowname[1:2]) %>% 
   write.csv('../Output/csv/r_pca.csv')
+
+```
+We also examine the correlation between the subjective well-being score and T1/T2 covid stress score
+
+```{r}
+# rearrange the order of the scales to provide a better visual
+r_pca_extended <- covid_wide %>% dplyr::select(neg_PCA_T1, neg_PCA_T2, T1_PSS_total, 
+                                               T2_PSS_total,
+                                               T1_DASS_total_A, T1_DASS_total_D, T1_DASS_total_S, 
+                      T2_DASS_total_A, T2_DASS_total_D, T2_DASS_total_S, Covid_Exp1, Covid_Exp2, Covid_Rem) %>% as.matrix() %>% 
+  rcorr()
+r_pca_extended_rowname <- c('T1 Subjective Well-being', 'T2 Subjective Well-being', 'T1 PSS', 
+                            'T2 PSS',
+                            'T1 DASS Anxiety', 'T1 DASS Depression', 'T1 DASS Stress',
+                            'T2 DASS Anxiety', 'T2 DASS Depression', 'T2 DASS Stress', 'Covid Stress T1 Experienced', 'Covid Stress T2 Experienced', 'Covid Stress Remembered')
+r_pca_extended$r[,1:4] %>% round(3) %>% 
+  set_rownames(r_pca_extended_rowname) %>% 
+  set_colnames(r_pca_extended_rowname[1:4])
 ```
 
 
@@ -156,7 +190,7 @@ covid_long_type <- covid_wide %>% mutate(BCovid_Exp1 = beta_squeeze((Covid_Exp1-
                names_to = 'MemType', values_to = 'BStress') %>% 
   mutate(MemType = relevel(factor(MemType), ref='BCovid_Exp1')) %>% 
   filter(!is.na(BStress))
-
+# though I did all the trick here, but it may worth noting that the final graph only include the untransformed y (on the scale between 1 to 5)
 covid_long_type_plot <- covid_wide %>% mutate(BCovid_Exp1 = beta_squeeze((Covid_Exp1-1)/4),
                                          BCovid_Exp2 = beta_squeeze((Covid_Exp2-1)/4),
                                          BCovid_Rem = beta_squeeze(Covid_Rem-1)/4) %>% 
@@ -175,7 +209,7 @@ fig1A + emomem_theme +
 ggsave('../Output/fig/pdf/fig_stress_compare_new_ylab.pdf',height=6,width=7)
 ggsave('../Output/fig/png/fig_stress_compare_new_ylab.png',height=6,width=7)
 
- # Fig 1B
+# Fig 1B
 nine11_long_type <- nine11_long_avg_T2 %>% 
   mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
          B911_Exp2 = beta_squeeze((curr_experience-1)/4),
@@ -204,7 +238,21 @@ ggsave('../Output/fig/pdf/fig_negemo_compare_new_ylab.pdf',height=6,width=7)
 ggsave('../Output/fig/png/fig_negemo_compare_new_ylab.png',height=6,width=7)
   
 ```
+We also provide a graph to comapre previous, current and remembered covid-related stress in May (early data collection) and November (late data collection)
 
+```{r}
+covid_long_type_plot %>% 
+  filter(month(T2_Dat)==5|month(T2_Dat)==11) %>% 
+  mutate(month=factor(month(T2_Dat))) %>% 
+  ggplot(aes(x = MemType, y = Stress, group = month, color = month)) + 
+  stat_summary(size=1.7, position=position_dodge(width=0.9)) +
+  emomem_theme + 
+  ylab('Intensity of Negative Feelings') +
+  xlab('') 
+ggsave('../Output/fig/pdf/revision_fig_stress_compare_month.pdf',height=6,width=7)
+ggsave('../Output/fig/png/revision_fig_stress_compare_month.png',height=6,width=7)
+
+```
 
 # Figure 2
 ## Figure 2A, 2C
@@ -549,7 +597,43 @@ ggsave('../Output/fig/png/fig1B_eth_contrast.png',height=6,width=12)
 
 ```
 #### Separate emotion - data viz
+
+\textcolor{red}{**note:**} The code for this graph has been udpated
+
 ```{r}
+nine11_wide_type_new <- nine11_wide %>% dplyr::select(Subject, item, experienced1, experienced2, remembered2, memdev2) %>% rename(Previous=experienced1, Current=experienced2, Remembered=remembered2) %>% 
+  # mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
+  #        B911_Exp2 = beta_squeeze((curr_experience-1)/4),
+  #        B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
+  pivot_longer(cols = c('Previous', 'Current','Remembered'),
+               names_to = 'MemType', values_to = 'NegEmo') %>% 
+  filter(!is.na(NegEmo))
+nine11_wide_type_new_avg <- nine11_wide_type_new %>% 
+  dplyr::select(Subject, item, MemType, NegEmo) %>% 
+  mutate(MemType = as.character(MemType)) %>% 
+  rbind(
+    nine11_long_type_plot %>% 
+      mutate(item = 'average') %>% 
+      dplyr::select(Subject, item, MemType, NegEmo) %>% 
+      mutate(MemType = as.character(MemType) %>% str_trim())
+  ) %>% 
+  mutate(MemType = factor(MemType, levels=c('Previous','Current','Remembered')),
+         item = factor(item, levels=c('frustration','anger','confusion','fear','sadness','shock','average')))
+
+fig1B_discrete_new <- nine11_wide_type_new_avg %>% 
+  ggplot(aes(x = MemType, y = NegEmo)) + 
+  stat_summary(size=1, aes(group=item, color=item)) +
+  stat_summary(size=1, aes(group=item, color=item), geom='line') 
+fig1B_discrete_new + emomem_theme + 
+  ylab('Intensity of Negative Feelings') +
+  xlab('') +
+  scale_x_discrete(labels=c('Previous','Current','Remembered'))+
+  scale_color_discrete(name='')+
+  theme(legend.position = 'right')
+
+ggsave('../Output/fig/pdf/fig1B_discrete_avg.pdf',height=6,width=9)
+ggsave('../Output/fig/png/fig1B_discrete_avg.png',height=6,width=9)
+
 fig1B_discrete <- nine11_wide_type %>% 
   ggplot(aes(x = MemType, y = stress_memory)) + 
   stat_summary(size=1, aes(group=item, color=item)) 
@@ -561,7 +645,23 @@ fig1B_discrete + emomem_theme +
   theme(legend.position = 'right')
 ggsave('../Output/fig/pdf/fig1B_discrete.pdf',height=6,width=9)
 ggsave('../Output/fig/png/fig1B_discrete.png',height=6,width=9)
+
 ```
+
+```{r}
+# basically now trying to do this analysis given the reviewer's argument: are the within-subject differences between a remembered and experienced emotion (for a specific emotion, e.g., remembered anger versus previous anger) smaller than the within-subject differences between different remembered emotions?
+
+a <- nine11_wide %>% dplyr::select(Subject, item, experienced1, experienced2, remembered2, memdev2) %>% rename(prev_experience=experienced1, curr_experience=experienced2, stress_memory=remembered2, dev=memdev2) %>%
+  mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
+         B911_Exp2 = beta_squeeze((curr_experience-1)/4),
+         B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
+  pivot_longer(cols = c('B911_Exp1', 'B911_Exp2','B911_Rem'),
+               names_to = 'MemType', values_to = 'BNegEmo') %>% 
+  mutate(MemType = relevel(factor(MemType), ref='B911_Exp1')) %>% 
+  filter(!is.na(BNegEmo))
+
+```
+
 
 #### Separate emotion - model viz
 ```{r}

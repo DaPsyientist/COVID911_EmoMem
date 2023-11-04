@@ -21,6 +21,8 @@ source('utils.R')
 # read in data
 # if you wish to load in the saved RData file, uncomment the line below
 load(file = '../data/BayesRegObj.RData')
+load(file= '../data/BayesRegObj_911Extra.RData')
+load(file= '../data/BayesRegObj_911Extra2.RData')
 covid_wide <-  read.csv('../data/Complete_test_Dev_Exp_Only_Data_Manipulation.csv') #each row is one observation, T1 and T2 separated by prefix in the column
 nine11_long_avg <- read.csv('../data/df.emo.long.avg_Only_Data_Manipulation.csv') #each row is one observation at one time point, stress_memory is avg across emotions
 
@@ -296,6 +298,54 @@ contrast(emmeans(MemType_911_MCMC_T2_discrete, ~ MemType*item), 'trt.vs.ctrl')
 - for anger, confusion, fear, sadness and shock: follow the pattern of T2_experienced stress < T1_experienced stress & T2_remembered > T1_experienced; for frustration, T2_experienced stress < T1_experienced stress & T2_remembered does not differ from T1_experienced
 - for each time point, there seem to exist difference between the level of intensity across different emotions that people are experiencing... not sure how much important it is to go into details here
 
+### difference within single time point
+
+In this section, we conducted additional analysis to compare the memory deviation (current DV) with the deviation across discrete emotion within single time point. 
+
+```{r}
+# some new efforts on doing the alternative analysis as the reviewer has suggested to visualize the within subject difference at each time point 
+
+nine11_wide_wide_experienced1 <- nine11_wide %>% dplyr::select(Subject, item, experienced1, remembered2) %>% pivot_wider(id_cols = Subject, names_from = item, values_from = experienced1) 
+names(nine11_wide_wide_experienced1) <- paste0('experienced_',names(nine11_wide_wide_experienced1))
+
+nine11_wide_wide_remembered2 <- nine11_wide %>% dplyr::select(Subject, item, experienced1, remembered2) %>% pivot_wider(id_cols = Subject, names_from = item, values_from = remembered2) 
+names(nine11_wide_wide_remembered2) <- paste0('remembered_',names(nine11_wide_wide_remembered2))
+
+nine11_wide_wide <- nine11_wide_wide_experienced1 %>% rename(Subject=experienced_Subject) %>% 
+  merge(
+    nine11_wide_wide_remembered2 %>% 
+      rename(Subject=remembered_Subject)
+  )
+
+nine11_wide_wide <- nine11_wide_wide %>% mutate(
+  diff1 = abs(remembered_anger-experienced_anger),
+  diff2 = abs(remembered_confusion-experienced_confusion),
+  diff3 = abs(remembered_fear-experienced_fear),
+  diff4 = abs(remembered_frustration-experienced_frustration),
+  diff5 = abs(remembered_sadness-experienced_sadness),
+  diff6 = abs(remembered_shock-experienced_shock),
+  delta1  = abs(remembered_anger-remembered_confusion),
+  delta2  = abs(remembered_anger-remembered_fear),
+  delta3  = abs(remembered_anger-remembered_frustration),
+  delta4  = abs(remembered_anger-remembered_sadness),
+  delta5  = abs(remembered_anger-remembered_shock),
+  delta6  = abs(remembered_confusion-remembered_fear),
+  delta7  = abs(remembered_confusion-remembered_frustration),
+  delta8  = abs(remembered_confusion-remembered_sadness),
+  delta9  = abs(remembered_confusion-remembered_shock),
+  delta10 = abs(remembered_fear-remembered_confusion),
+  delta11 = abs(remembered_fear-remembered_confusion),
+  delta12 = abs(remembered_fear-remembered_confusion),
+  delta13 = abs(remembered_frustration-remembered_sadness),
+  delta14 = abs(remembered_frustration-remembered_shock),
+  delta15 = abs(remembered_sadness-remembered_shock),
+) 
+nine11_wide_wide$avg <- rowMeans(nine11_wide_wide %>% dplyr::select(starts_with('delta')))
+nine11_wide_wide$diff_avg <- rowMeans(nine11_wide_wide %>% dplyr::select(starts_with('diff')))
+
+t.test(nine11_wide_wide$diff_avg, nine11_wide_wide$avg, paired = TRUE) 
+```
+
 # Deviance  ~ Dataset (Covid/911_T2) + T1_experienced
 
 In this analysis, we aim to compare whether people's degree of deviance differ between Covid and 9/11 data.
@@ -360,6 +410,13 @@ Rem_covid_MCMC_weighted <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
                            weights = num_weights_3var, seed = seed_no, data = covid_BRem)
 }
 
+Rem_covid_MCMC_weighted_loss <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2 + personal_loss + finance_loss,
+                                  family = mgcv::betar, iter= niters, 
+                           weights = num_weights_3var, seed = seed_no, data = covid_BRem)
+
+Rem_covid_MCMC_weighted_loss_cont <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2 + personal_loss + finance_loss_cont,
+                                  family = mgcv::betar, iter= niters, 
+                           weights = num_weights_3var, seed = seed_no, data = covid_BRem)
 
 #Posterior Predictive Check (Ppc)
 y_Rem_covid_MCMC_weighted <- covid_BRem$BCovid_Rem
@@ -557,7 +614,7 @@ nine11_percent <- nine11_long_avg %>%
   filter(!is.na(prev_experience))
 
 
-# note: the original data stored in the .rda is wrong. it was operated on percent, while we are actually interested in the raw deviation
+# Question to myself: I do not have this file stored?
 
 if (!exists("Time_avg_911_MCMC_weighted")) {
 Time_avg_911_MCMC_weighted <- stan_glmer(Bdev ~ time + prev_experience + (1|Subject), 
@@ -565,6 +622,15 @@ Time_avg_911_MCMC_weighted <- stan_glmer(Bdev ~ time + prev_experience + (1|Subj
                              weights = num_weights_updated, seed = seed_no,
                              data = nine11_percent)
 }
+
+# rerun the analysis above with a different reference level
+if (!exists("Time_avg_911_MCMC_weighted_ref3")) {
+Time_avg_911_MCMC_weighted_ref3 <- stan_glmer(Bdev ~ time + prev_experience + (1|Subject), 
+                             family = mgcv::betar, iter= niters, 
+                             weights = num_weights_updated, seed = seed_no,
+                             data = nine11_percent %>% mutate(time=relevel(time, ref='3')))
+}
+
 #Posterior Predictive Check (Ppc)
 y_Time_avg_911_MCMC_weighted <- nine11_percent$Bdev
 yrep_Time_avg_911_MCMC_weighted <- posterior_predict(Time_avg_911_MCMC_weighted, draws = 500)
@@ -722,6 +788,55 @@ y_covid_delta_EmoWell_MCMC <- (covid_percent %>% filter(!is.na(twovar_Covid_Exp1
 
 ```
 
+We also try to do the same analysis replacing emo_well_being_delta with dass_delta 
+
+```{r}
+# correlation plot 
+# controlled analysis: adding Covid_Exp1 as covariate
+covid_percent <- covid_wide %>% 
+  mutate(BCovid_Dev = beta_squeeze((Covid_Dev+4)/8)) %>% 
+  #mutate(Percent = Covid_Dev / twovar_Covid_Exp1) %>% filter(!is.na(Percent)) %>% 
+  filter(!is.na(BCovid_Dev)) %>% filter(!is.na(emo_well_being_delta)) %>% 
+  mutate(T2_DASS_total = T2_DASS_1+T2_DASS_2+T2_DASS_3+T2_DASS_4+T2_DASS_5+T2_DASS_6+
+           T2_DASS_7+T2_DASS_8+T2_DASS_9+T2_DASS_10+T2_DASS_11+T2_DASS_12+T2_DASS_13+
+           T2_DASS_14+T2_DASS_15+T2_DASS_16+T2_DASS_17+T2_DASS_18+T2_DASS_19+T2_DASS_20+T2_DASS_21,
+         T1_DASS_total = T1_DASS_1+T1_DASS_2+T1_DASS21_3_Depression+T1_DASS_4+T1_DASS_5+T1_DASS_6+
+           T1_DASS_7+T1_DASS_8+T1_DASS_9+T1_DASS_10+T1_DASS_11+T1_DASS_12+T1_DASS_13+
+           T1_DASS_14+T1_DASS_15+T1_DASS_16+T1_DASS_17+T1_DASS_18+T1_DASS_19+T1_DASS_20+T1_DASS_21,
+         DASS_delta = T1_DASS_total - T2_DASS_total,
+         DASS_delta_z = scale(DASS_delta))
+
+# A couple of regressions were run: 
+# - covid_delta_EmoWell_MCMC: Dev ~ Emo_well_being + prev_experience
+# - covid_delta_EmoWell_MCMC_both: Dev ~ Emo_well_being + prev_experience + curr_experience, weight=weights_3var (the most strict one)
+# - covid_delta_EmoWell_MCMC_both_2var: Dev ~ Emo_well_being + prev_experience + curr_experience, weight=weight_2var (the most relevant one)
+# - with suffix _betareg: for the purpose of posterior_predict 
+if (!exists("covid_delta_dass_z_MCMC")) {
+covid_delta_dass_z_MCMC <- stan_glm(BCovid_Dev ~ DASS_delta_z + Covid_Exp1,
+                                         family = mgcv::betar, seed = seed_no,
+                                         iter= niters, weights = num_weights_3var,
+                                         covid_percent %>% filter(!is.na(Covid_Exp1)))
+}
+if (!exists("covid_delta_dass_z_MCMC_both")) {
+covid_delta_dass_z_MCMC_both <- stan_glm(BCovid_Dev ~ DASS_delta_z + twovar_Covid_Exp1 + Covid_Exp2,
+                                     family = mgcv::betar, seed = seed_no,
+                                     iter= niters, weights = num_weights_3var,
+                                     covid_percent %>% filter(!is.na(Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))
+}
+if (!exists("covid_delta_dass_z_MCMC_both_2var")) {
+covid_delta_dass_z_MCMC_both_2var <- stan_glm(BCovid_Dev ~ DASS_delta_z + twovar_Covid_Exp1 + Covid_Exp2,
+                                          family = mgcv::betar, seed = seed_no,
+                                          iter= niters, weights = num_weights_2var,
+                                          covid_percent %>% filter(!is.na(twovar_Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))
+}
+
+#Posterior Predictive Check (Ppc)
+#y_covid_percent_EmoWell_MCMC <- covid_percent$Percent
+#yrep_covid_percent_EmoWell_MCMC <- posterior_predict(covid_percent_EmoWell_MCMC, draws = 500) #Broken
+y_covid_delta_dass_MCMC <- (covid_percent %>% filter(!is.na(twovar_Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)))$BCovid_Dev
+
+```
+
 The results suggest that there is a positive correlation between delta emo well being and deviance. 
 
 ### Covariate
@@ -834,6 +949,7 @@ alpha_remembered2 <- nine11_wide %>% dplyr::select(Subject, item, remembered2) %
   pivot_wider(id_cols = Subject, values_from = remembered2, names_from = item) %>% dplyr::select(-Subject) %>% psych::alpha() 
 alpha_remembered2$total
 ```
+
 We also provide the calculation for omega
 ```{r}
 library(psych)
@@ -883,10 +999,189 @@ save(MemType_covid_MCMC_covariate_gender, MemType_covid_MCMC_covariate_race, Mem
      covid_delta_EmoWell_MCMC_gender, covid_delta_EmoWell_MCMC_race, covid_delta_EmoWell_MCMC_eth, covid_delta_EmoWell_MCMC_ses_country, 
      file='BayesRegObj_911Extra.RData')
 
+save(Time_avg_911_MCMC_weighted, Time_avg_911_MCMC_weighted_ref3,
+     file='BayesRegObj_911Extra2.RData')
+```
+
+```{r}
+# ok. now redo all the analysis with just data from the first half 
+# change niter to 4000 for a quicker analysis for now
+niters <- 4000
+covid_long_type <- covid_wide %>% mutate(BCovid_Exp1 = beta_squeeze((Covid_Exp1-1)/4),
+                                         BCovid_Exp2 = beta_squeeze((Covid_Exp2-1)/4),
+                                         BCovid_Rem = beta_squeeze(Covid_Rem-1)/4) %>% 
+  pivot_longer(cols = c('BCovid_Exp1','BCovid_Exp2','BCovid_Rem'),
+               names_to = 'MemType', values_to = 'BStress') %>% 
+  mutate(MemType = relevel(factor(MemType), ref='BCovid_Exp1')) %>% 
+  filter(!is.na(BStress))
+
+#  sanity check: BStress has been beta_squeezed and looks like a beta distribution (that is, fall between 0 and 1)
+if (!exists("MemType_covid_MCMC_early")) {
+MemType_covid_MCMC_early <- stan_glmer(BStress ~ MemType + (1|Subject), 
+                              family = mgcv::betar, iter= niters, seed=seed_no, data = covid_long_type %>% filter(month(T2_Dat) <= 8))
+}
+if (!exists("MemType_covid_MCMC_late")) {
+MemType_covid_MCMC_late <- stan_glmer(BStress ~ MemType + (1|Subject), 
+                              family = mgcv::betar, iter= niters, seed=seed_no, data = covid_long_type %>% filter(month(T2_Dat) > 8))
+}
+
+MemType_covid_MCMC_early %>% describe_posterior()
+MemType_covid_MCMC_late %>% describe_posterior()
+
+covid_percent <- covid_wide %>% mutate(Percent = Covid_Dev / twovar_Covid_Exp1) %>% filter(!is.na(Percent)) 
+
+nine11_percent_T2 <- nine11_long_avg_T2 %>% mutate(Percent = memdev / twovar_prev_experience) %>% filter(!is.na(Percent))
+
+combined_percent_early <- covid_percent %>% 
+  filter(month(T2_Dat)<=8) %>% 
+  dplyr::select(Subject, Percent, Covid_Dev, twovar_Covid_Exp1, num_weights_2var) %>% 
+  rename(dev = Covid_Dev, twovar_prev = twovar_Covid_Exp1, num_weights = num_weights_2var) %>% 
+  mutate(Dataset = 'Covid') %>% 
+  rbind(
+    nine11_percent_T2 %>% dplyr::select(Subject, Percent, memdev, twovar_prev_experience, num_weights_updated) %>% 
+      rename(dev = memdev, twovar_prev = twovar_prev_experience, num_weights = num_weights_updated) %>% 
+      mutate(Dataset = '911')
+  ) %>% 
+  mutate(Dataset = relevel(factor(Dataset), ref = 'Covid')) %>% 
+  group_by(Dataset) %>% 
+  mutate(Bdev = beta_squeeze((dev+4)/8))
+
+combined_percent_late <- covid_percent %>% 
+  filter(month(T2_Dat)>8) %>% 
+  dplyr::select(Subject, Percent, Covid_Dev, twovar_Covid_Exp1, num_weights_2var) %>% 
+  rename(dev = Covid_Dev, twovar_prev = twovar_Covid_Exp1, num_weights = num_weights_2var) %>% 
+  mutate(Dataset = 'Covid') %>% 
+  rbind(
+    nine11_percent_T2 %>% dplyr::select(Subject, Percent, memdev, twovar_prev_experience, num_weights_updated) %>% 
+      rename(dev = memdev, twovar_prev = twovar_prev_experience, num_weights = num_weights_updated) %>% 
+      mutate(Dataset = '911')
+  ) %>% 
+  mutate(Dataset = relevel(factor(Dataset), ref = 'Covid')) %>% 
+  group_by(Dataset) %>% 
+  mutate(Bdev = beta_squeeze((dev+4)/8))
+
+# I still need them together here
+
+if (!exists("Dataset_Delta_baseline_MCMC_early")) {
+Dataset_Delta_baseline_MCMC_early <- stan_glm(Bdev ~ Dataset + twovar_prev, family = mgcv::betar, iter= niters, seed=seed_no, data = combined_percent_early) 
+}
+
+if (!exists("Dataset_Delta_baseline_MCMC_late")) {
+Dataset_Delta_baseline_MCMC_late <- stan_glm(Bdev ~ Dataset + twovar_prev, family = mgcv::betar, iter= niters, seed=seed_no, data = combined_percent_late) 
+}
+
+describe_posterior(Dataset_Delta_baseline_MCMC_early) # more overestimation for 9-11
+describe_posterior(Dataset_Delta_baseline_MCMC_late) # more overestimation for 9-11
+
+###
+covid_BRem <- covid_wide %>% mutate(BCovid_Rem = beta_squeeze((Covid_Rem-1)/4)) %>% 
+  filter(!is.na(BCovid_Rem)) %>% filter(!is.na(Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)) %>% 
+  mutate(T1_Demographics_race_category = case_when(T1_Demographics_race == 'White/Caucasian' ~ 'White',
+                                                   T1_Demographics_race == 'Black/African American' ~ 'Black',
+                                                   T1_Demographics_race == 'Asian' ~ 'Asian',
+                                                   is.na(T1_Demographics_race) ~ 'Other',
+                                                   TRUE ~ 'Mixed'))
+if (!exists("Rem_covid_MCMC_weighted_early")) {
+Rem_covid_MCMC_weighted_early <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
+                                  family = mgcv::betar, iter= niters, 
+                           weights = num_weights_3var, seed = seed_no, data = covid_BRem %>% filter(month(T2_Dat)<=8))
+}
+
+if (!exists("Rem_covid_MCMC_weighted_late")) {
+Rem_covid_MCMC_weighted_late <- stan_glm(BCovid_Rem ~ Covid_Exp1 + Covid_Exp2,
+                                  family = mgcv::betar, iter= niters, 
+                           weights = num_weights_3var, seed = seed_no, data = covid_BRem %>% filter(month(T2_Dat)>8))
+}
+
+
+describe_posterior(Rem_covid_MCMC_weighted_early)
+describe_posterior(Rem_covid_MCMC_weighted_late) # this result is actually different from before!
+
+covid_percent <- covid_wide %>% 
+  mutate(BCovid_Dev = beta_squeeze((Covid_Dev+4)/8)) %>% 
+  #mutate(Percent = Covid_Dev / twovar_Covid_Exp1) %>% filter(!is.na(Percent)) %>% 
+  filter(!is.na(BCovid_Dev)) %>% filter(!is.na(emo_well_being_delta))
+if (!exists("covid_delta_EmoWell_MCMC_early")) {
+covid_delta_EmoWell_MCMC_early <- stan_glm(BCovid_Dev ~ emo_well_being_delta + Covid_Exp1,
+                                         family = mgcv::betar, seed = seed_no,
+                                         iter= niters, weights = num_weights_3var,
+                                         covid_percent %>% filter(!is.na(Covid_Exp1)) %>% filter(month(T2_Dat)<=8))
+}
+if (!exists("covid_delta_EmoWell_MCMC_late")) {
+covid_delta_EmoWell_MCMC_late <- stan_glm(BCovid_Dev ~ emo_well_being_delta + Covid_Exp1,
+                                         family = mgcv::betar, seed = seed_no,
+                                         iter= niters, weights = num_weights_3var,
+                                         covid_percent %>% filter(!is.na(Covid_Exp1)) %>% filter(month(T2_Dat)>8))
+}
+if (!exists("covid_delta_EmoWell_MCMC_both_early")) {
+covid_delta_EmoWell_MCMC_both_early <- stan_glm(BCovid_Dev ~ emo_well_being_delta + twovar_Covid_Exp1 + Covid_Exp2,
+                                     family = mgcv::betar, seed = seed_no,
+                                     iter= niters, weights = num_weights_3var,
+                                     covid_percent %>% filter(!is.na(Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)) %>% filter(month(T2_Dat)<=8))
+}
+if (!exists("covid_delta_EmoWell_MCMC_both_late")) {
+covid_delta_EmoWell_MCMC_both_late <- stan_glm(BCovid_Dev ~ emo_well_being_delta + twovar_Covid_Exp1 + Covid_Exp2,
+                                     family = mgcv::betar, seed = seed_no,
+                                     iter= niters, weights = num_weights_3var,
+                                     covid_percent %>% filter(!is.na(Covid_Exp1)) %>% filter(!is.na(Covid_Exp2)) %>% filter(month(T2_Dat)>8))
+}
+
+# what if we are only looking at data collected in May vs. in November?
+t.test(covid_wide$Covid_Exp1[month(covid_wide$T2_Dat)==5],
+       covid_wide$Covid_Exp1[month(covid_wide$T2_Dat)==11])
+# there is no difference in their initial report stress experience
+# a lot of ppl in November do not have DASS score - also I dont think we need to report that our sample  
+t.test(covid_wide$Covid_Exp2[month(covid_wide$T2_Dat)==5],
+       covid_wide$Covid_Exp2[month(covid_wide$T2_Dat)==11])
+t.test(covid_wide$Covid_Rem[month(covid_wide$T2_Dat)==5],
+       covid_wide$Covid_Rem[month(covid_wide$T2_Dat)==11])
 
 ```
 
+```{r}
+# trying to run analysis to tease apart subjective and objective stress measure
+# what are our columns reflecting objective? 
+# Let's probably just look at the covid one for now since this is what we are familiar with (also what they ask for)
+covid_wide <- covid_wide %>% 
+  mutate(personal_loss = case_when(T2_Q33 == "No" ~ 0,
+                                   T2_Q33 == "Yes" ~ 1,
+                                   .default = NA),
+         finance_loss = case_when(T2_Q34 == "No" ~ 0,
+                                   T2_Q34 == "Yes" ~ 1,
+                                   .default = NA),
+         finance_loss_level = case_when(str_detect(T2_Q35, 'Minimal') ~ 1,
+                                        str_detect(T2_Q35, 'Moderate') ~ 2,
+                                        str_detect(T2_Q35, 'Severe') ~ 3,
+                                        str_detect(T2_Q35, 'Devastating') ~ 4,
+                                        .default = 0),
+         finance_loss_cont = finance_loss * finance_loss_level)
 
+covid_percent_new <- covid_wide %>% 
+  mutate(BCovid_Dev = beta_squeeze((Covid_Dev+4)/8)) %>% 
+  mutate(BCovid_Diff = beta_squeeze((Covid_Exp2-Covid_Exp1+4)/8)) %>% 
+  mutate(BCovid_Exp2 = beta_squeeze((Covid_Exp2-1)/4)) %>% 
+  filter(!is.na(BCovid_Dev)) %>% 
+  filter(!is.na(BCovid_Diff)) 
+
+# if they become worse in the process, will they overestimate?
+
+test1.T2 <- stan_glm(BCovid_Exp2 ~ personal_loss + finance_loss,
+                                     family = mgcv::betar, seed = seed_no,
+                                     iter= niters,
+                                     covid_percent_new)
+
+test1 <- stan_glm(BCovid_Diff ~ personal_loss + finance_loss_cont + Covid_Exp1,
+                                     family = mgcv::betar, seed = seed_no,
+                                     iter= niters, weights = num_weights_3var,
+                                     covid_percent_new)
+
+test2 <- stan_glm(BCovid_Dev ~ personal_loss + finance_loss_cont + Covid_Exp1 + emo_well_being_delta,
+                                     family = mgcv::betar, seed = seed_no,
+                                     iter= niters, weights = num_weights_3var,
+                                     covid_percent_new)
+test %>% describe_posterior()
+Covid_Dev ~ personal_loss + finance_loss_cont
+```
 
 
 

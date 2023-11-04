@@ -648,20 +648,6 @@ ggsave('../Output/fig/png/fig1B_discrete.png',height=6,width=9)
 
 ```
 
-```{r}
-# basically now trying to do this analysis given the reviewer's argument: are the within-subject differences between a remembered and experienced emotion (for a specific emotion, e.g., remembered anger versus previous anger) smaller than the within-subject differences between different remembered emotions?
-
-a <- nine11_wide %>% dplyr::select(Subject, item, experienced1, experienced2, remembered2, memdev2) %>% rename(prev_experience=experienced1, curr_experience=experienced2, stress_memory=remembered2, dev=memdev2) %>%
-  mutate(B911_Exp1 = beta_squeeze((prev_experience-1)/4),
-         B911_Exp2 = beta_squeeze((curr_experience-1)/4),
-         B911_Rem = beta_squeeze((stress_memory-1)/4)) %>% 
-  pivot_longer(cols = c('B911_Exp1', 'B911_Exp2','B911_Rem'),
-               names_to = 'MemType', values_to = 'BNegEmo') %>% 
-  mutate(MemType = relevel(factor(MemType), ref='B911_Exp1')) %>% 
-  filter(!is.na(BNegEmo))
-
-```
-
 
 #### Separate emotion - model viz
 ```{r}
